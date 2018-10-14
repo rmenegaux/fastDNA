@@ -1,0 +1,10 @@
+.*.swp
+*.o
+*.bin
+*.vec
+*.pyc
+*.pred
+.DS_Store
+/fastdna
+# data
+result
