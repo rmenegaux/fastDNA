@@ -56,8 +56,8 @@ index FastText::getWordId(std::string& word) const {
   if (word.size() != args_->minn) {
     return -1;
   }
-  std::vector<index> ngrams, ngrams_comp;
-  dict_->readSequence(word, ngrams, ngrams_comp);
+  std::vector<index> ngrams;
+  dict_->readSequence(word, ngrams);
   return ngrams.empty() ? -1 : ngrams[0];
 }
 
@@ -67,8 +67,8 @@ int32_t FastText::getSubwordId(const std::string& word) const {
 }
 
 void FastText::getWordVector(Vector& vec, std::string& word) const {
-  std::vector<index> ngrams, ngrams_comp;
-  dict_->readSequence(word, ngrams, ngrams_comp);
+  std::vector<index> ngrams;
+  dict_->readSequence(word, ngrams);
   vec.zero();
   for (int i = 0; i < ngrams.size(); i ++) {
     addInputVector(vec, ngrams[i]);
@@ -567,7 +567,7 @@ void FastText::trainThread(int32_t threadId) {
   // FIXME
   const int64_t ntokens = size_ / args_->length; // dict_->ntokens();
   int64_t localFragmentCount = 0;
-  std::vector<index> line, line_comp;
+  std::vector<index> line;
   std::vector<int32_t> labels;
   int label;
   while (tokenCount_ < args_->epoch * ntokens) {
@@ -584,10 +584,9 @@ void FastText::trainThread(int32_t threadId) {
         labels.push_back(label);
         // Go to that position
         utils::seek(ifs, pos);
-        if (dict_->readSequence(ifs, line, line_comp, args_->length, rng)) {
+        if (dict_->readSequence(ifs, line, args_->length, rng)) {
           localFragmentCount += 1;
           supervised(model, lr, line, labels);
-          supervised(model, lr, line_comp, labels);
         }
       }
     } else if (args_->model == model_name::cbow) {

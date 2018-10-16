@@ -44,6 +44,8 @@ class Dictionary {
   protected:
     static const int32_t MAX_VOCAB_SIZE = 30000000;
     static const int32_t MAX_LINE_SIZE = 1024;
+    static const std::vector<int8_t> ends2ind_;
+    static const std::vector<std::pair<char, char>> ind2ends_;
 
     void reset(std::istream&) const;
     void pushHash(std::vector<int32_t>& hashes, int32_t id) const;
@@ -65,6 +67,7 @@ class Dictionary {
     explicit Dictionary(std::shared_ptr<Args>);
     explicit Dictionary(std::shared_ptr<Args>, std::istream&);
     void addLabel(const std::string&);
+    index nwords(const int8_t k) const;
     index nwords() const;
     int32_t nlabels() const;
     int64_t ntokens() const;
@@ -99,21 +102,20 @@ class Dictionary {
     void dump(std::ostream&) const;
     int8_t base2int(const char c) const;
     char int2base(const int c) const;
+    index computeIndex(index ind,
+                       index index_reverse,
+                       const int k) const;
     std::string getSequence(index i) const;
+    void getSequenceRCI(std::string& seq, index index, const int8_t k) const;
+    void getSequenceClassic(std::string& seq, index index, const int8_t k) const;
     bool readSequence(
         std::istream& in, std::vector<index>& ngrams,
-        std::vector<index>& ngrams_comp,
         const int length) const;
     bool readSequence(
         std::istream& in, std::vector<index>& ngrams,
-        const int length) const;
-    bool readSequence(
-        std::istream& in, std::vector<index>& ngrams,
-        std::vector<index>& ngrams_comp,
         const int length,
         std::mt19937_64&) const;
     bool readSequence(std::string& word,
-                      std::vector<index>& ngrams,
-                      std::vector<index>& ngrams_comp) const;
+                      std::vector<index>& ngrams) const;
 };
 }
