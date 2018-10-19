@@ -159,7 +159,6 @@ bool Dictionary::readSequence(std::istream& in,
       }
       return (i >= k);
     }
-    c = toupper(c);
     switch(c) {
       case 'A' :
       case 'a' : { val = 0; val_comp = 2; break;}
