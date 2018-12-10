@@ -48,6 +48,8 @@ parser.add_argument("-lr", help="learning rate",
                     type=float, default=0.1)
 parser.add_argument("-noise", help="level of training noise",
                     type=float, default=0)
+parser.add_argument("-skip", help="number of character steps",
+                    type=int, default=0)
 parser.add_argument("-L", help="training read length",
                     type=int, default=200)
 parser.add_argument("-freeze", help="freeze the embeddings",
@@ -103,6 +105,7 @@ if args.train:
         epoch=args.e,
         lr=args.lr,
         noise=args.noise,
+        skip=args.skip,
         freeze=args.freeze,
         pretrained_vectors=pretrained_vectors,
         threads=args.threads,

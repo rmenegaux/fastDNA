@@ -12,6 +12,12 @@ train_dataset = os.path.join(data_path, 'train', 'A1.train.fasta')
 train_labels = os.path.join(data_path, 'train', 'A1.train.taxid')
 test_dataset = os.path.join(data_path, 'test', 'A1.test.fasta')
 test_labels = os.path.join(data_path, 'test', 'A1.test.taxid')
+# test_dataset = '~/These/these_romain/data/large-DB/simulated-dataset/test.fragments.fasta'
+# test_labels = '~/These/these_romain/data/large-DB/simulated-dataset/test.fragments.taxid'
+# train_dataset = os.path.join(data_path, 'train', 'B1.20.500.fasta')
+# train_labels = os.path.join(data_path, 'train', 'B1.20.500.taxid')
+# test_dataset = os.path.join(data_path, 'test', 'B1.20.500.test.fasta')
+# test_labels = os.path.join(data_path, 'test', 'B1.20.500.test.taxid')
 
 args = {
 "output_dir": output_path, # Directory for saving model and predictions
@@ -29,12 +35,14 @@ args = {
 "threads": 4, # number of threads for training
 "d": 10, # embedding dimension
 "k": 10, # k-mer length
-"e": 1, # number of epochs
-"lr": 0.1, # learning rate
-"noise": 0, # level of training noise
+"e": 50, # number of epochs
+"lr": .4, # learning rate
+"noise": 4, # level of training noise
+"skip": 2, # Number of character steps
 "L": 100, # training read length,
 "freeze": False, # freeze the embeddings,
-"pretrained_vectors": False, # pretrained vectors .vec files,
+#"pretrained_vectors": 'output/models/fdna_k8_d10_e50.vec' # False, # pretrained vectors .vec files,
+# "model_name": 'fdna_k12_d10_e400_lr0.4_n4.0_L100_skip10'
 }
 
 # To reproduce results from the paper:

@@ -27,7 +27,7 @@ class FastDNA():
 
     def train(self, model_path, train_data, train_labels,
               dim=10, k=10,
-              length=200, epoch=1, lr=0.1, noise=0,
+              length=200, epoch=1, lr=0.1, noise=0, skip=1,
               freeze=False, pretrained_vectors="", previous_model="",
               threads=4):
         '''
@@ -42,6 +42,8 @@ class FastDNA():
             epoch, dim, lr, k, k, threads, length)
         if noise > 0:
             parameters += ' -noise {}'.format(int(noise * 1000))
+        if skip != 1:
+            parameters += ' -skip {}'.format(skip)
         if freeze:
             parameters += ' -freezeEmbeddings'
         # Loading previous .vec or .bin

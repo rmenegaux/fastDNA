@@ -24,7 +24,8 @@ model_path="$output_path/$model_name"
 
 # Train a supervised model
 echo "Training model $model_name"
-$fastdna supervised -input $train_dataset -labels $train_labels -output $model_path -minn $k -dim $d -epoch $e -thread $threads
+$fastdna supervised -input $train_dataset -labels $train_labels -output $model_path \
+-minn $k -dim $d -epoch $e -thread $threads -lr 0.2
 
 # Test the model
 echo "Testing model $model_name"
