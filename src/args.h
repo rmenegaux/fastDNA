@@ -46,6 +46,7 @@ class Args {
     int maxn;
     int length;
     int noise;
+    int skip;
     int thread;
     double t;
     std::string label;
@@ -53,6 +54,7 @@ class Args {
     std::string pretrainedVectors;
     std::string loadModel;
     bool saveOutput;
+    bool saveVectors;
     bool freezeEmbeddings;
 
     bool qout;

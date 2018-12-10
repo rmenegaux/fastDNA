@@ -217,7 +217,7 @@ bool Dictionary::readSequence(std::istream& in,
 
   int i = 0;
   while (length == -1 || i < length) {
-    if (i >= k) {
+    if (i >= k && i % args_->skip == 0) {
       ngrams.push_back(computeIndex(index, index_reverse, k));
     }
     c = sb.sbumpc();
@@ -291,7 +291,7 @@ bool Dictionary::readSequence(std::istream& in,
 
   int i = 0;
   while (length == -1 || i < length) {
-    if (i >= k) {
+    if (i >= k && i % 1 == 0) {
       ngrams.push_back(computeIndex(index, index_reverse, k));
     }
     c = sb.sbumpc();

@@ -29,6 +29,7 @@ Args::Args() {
   model = model_name::sg;
   bucket = 0;
   length = 200;
+  skip = 1;
   noise = 0;
   minn = 3;
   maxn = 6;
@@ -40,6 +41,7 @@ Args::Args() {
   pretrainedVectors = "";
   loadModel = "";
   saveOutput = false;
+  saveVectors = true;
   freezeEmbeddings = false;
 
   qout = false;
@@ -144,6 +146,8 @@ void Args::parseArgs(const std::vector<std::string>& args) {
       //   bucket = std::stoi(args.at(ai + 1));
       } else if (args[ai] == "-noise") {
         noise = std::stoi(args.at(ai + 1));
+      } else if (args[ai] == "-skip") {
+        skip = std::stoi(args.at(ai + 1));
       } else if (args[ai] == "-length") {
         length = std::stoi(args.at(ai + 1));
       } else if (args[ai] == "-minn") {
@@ -239,6 +243,7 @@ void Args::printTrainingHelp() {
     << "  -lrUpdateRate       change the rate of updates for the learning rate [" << lrUpdateRate << "]\n"
     << "  -dim                size of word vectors [" << dim << "]\n"
     << "  -noise              mutation rate (/100,000)[" << noise << "]\n"
+    << "  -skip               step as number of characters [" << skip << "]\n"
     << "  -length             length of fragments for training [" << length << "]\n"
     // << "  -ws                 size of the context window [" << ws << "]\n"
     << "  -epoch              number of epochs [" << epoch << "]\n"
