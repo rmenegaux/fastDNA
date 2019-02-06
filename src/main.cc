@@ -125,22 +125,23 @@ void printDumpUsage() {
 }
 
 void test(const std::vector<std::string>& args) {
-  if (args.size() < 5 || args.size() > 7) {
+  if (args.size() < 6 || args.size() > 8) {
     printTestUsage();
     exit(EXIT_FAILURE);
   }
   int32_t k = 1;
   real threshold = 0.0;
-  if (args.size() > 5) {
-    k = std::stoi(args[5]);
-    if (args.size() == 7) {
-      threshold = std::stof(args[6]);
+  if (args.size() > 6) {
+    k = std::stoi(args[6]);
+    if (args.size() == 8) {
+      threshold = std::stof(args[7]);
     }
   }
 
   FastText fasttext;
   // std::cerr << "Loading Model" << std::endl;
   fasttext.loadModel(args[2]);
+  fasttext.loadIndex(args[5]);
   // std::cerr << "Model Loaded" << std::endl;
 
   std::tuple<int64_t, double, double> result;

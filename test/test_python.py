@@ -13,6 +13,12 @@ train_labels = os.path.join(data_path, 'train', 'A1.train.taxid')
 test_dataset = os.path.join(data_path, 'test', 'A1.test.fasta')
 test_labels = os.path.join(data_path, 'test', 'A1.test.taxid')
 
+# data_path = '~/These/these_romain/data/small-DB/'
+# train_dataset = os.path.join(data_path, 'reference-dataset', 'train_small-db.fasta')
+# train_labels = os.path.join(data_path, 'reference-dataset', 'train_small-db.species-level.taxid')
+# test_dataset = os.path.join(data_path, 'simulated-dataset', 'test.fragments.fasta')
+# test_labels = os.path.join(data_path, 'simulated-dataset', 'test.fragments.taxid')
+
 args = {
 "output_dir": output_path, # Directory for saving model and predictions
 "train" : True, # train the model

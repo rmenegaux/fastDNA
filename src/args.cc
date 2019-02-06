@@ -39,6 +39,7 @@ Args::Args() {
   verbose = 2;
   pretrainedVectors = "";
   loadModel = "";
+  loadIndex = "";
   saveOutput = false;
   freezeEmbeddings = false;
 
@@ -162,6 +163,8 @@ void Args::parseArgs(const std::vector<std::string>& args) {
         pretrainedVectors = std::string(args.at(ai + 1));
       } else if (args[ai] == "-loadModel") {
         loadModel = std::string(args.at(ai + 1));
+      } else if (args[ai] == "-loadIndex") {
+        loadIndex = std::string(args.at(ai + 1));
       } else if (args[ai] == "-saveOutput") {
         saveOutput = true;
         ai--;

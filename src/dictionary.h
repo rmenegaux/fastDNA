@@ -20,6 +20,7 @@
 
 #include "args.h"
 #include "real.h"
+#include "KmerIndex.h"
 
 namespace fasttext {
 
@@ -58,6 +59,7 @@ class Dictionary {
     int32_t nlabels_;
     int32_t nsequences_;
     int64_t pruneidx_size_;
+    KmerIndex kmer_index_;
     std::vector<int64_t> counts_;
     std::unordered_map<int32_t, int32_t> pruneidx_;
 
@@ -69,6 +71,7 @@ class Dictionary {
     void addLabel(const std::string&);
     index nwords(const int8_t k) const;
     index nwords() const;
+    index nlong() const;
     int32_t nlabels() const;
     int64_t ntokens() const;
     bool discard(int32_t, real) const;
@@ -85,14 +88,16 @@ class Dictionary {
     void loadString(std::istream& in, std::string& s) const;
     void save(std::ostream&) const;
     void load(std::istream&);
+    void loadIndex(const std::string&);
     // void loadLabelMap();
     std::vector<int64_t> getCounts() const;
     int32_t getLine(std::istream&, std::vector<index>&, std::vector<int32_t>&)
         const;
     int32_t getLine(std::istream&, std::vector<index>&,
+                    std::vector<index>& long_k,
                     std::minstd_rand&) const;
     int32_t getLine(std::istream& fasta,
-                            std::vector<index>& ngrams) const;
+                    std::vector<index>& ngrams) const;
     int32_t getLine(std::istream& fasta,
                     std::istream& labelfile,
                     std::vector<index>& ngrams,
@@ -113,9 +118,11 @@ class Dictionary {
         const int length) const;
     bool readSequence(
         std::istream& in, std::vector<index>& ngrams,
+        std::vector<index>& long_k,
         const int length,
         std::mt19937_64&) const;
     bool readSequence(std::string& word,
-                      std::vector<index>& ngrams) const;
+                      std::vector<index>& ngrams,
+                      std::vector<index>& long_k) const;
 };
 }

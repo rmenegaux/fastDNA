@@ -56,8 +56,8 @@ index FastText::getWordId(std::string& word) const {
   if (word.size() != args_->minn) {
     return -1;
   }
-  std::vector<index> ngrams;
-  dict_->readSequence(word, ngrams);
+  std::vector<index> ngrams, long_k;
+  dict_->readSequence(word, ngrams, long_k);
   return ngrams.empty() ? -1 : ngrams[0];
 }
 
@@ -67,8 +67,8 @@ int32_t FastText::getSubwordId(const std::string& word) const {
 }
 
 void FastText::getWordVector(Vector& vec, std::string& word) const {
-  std::vector<index> ngrams;
-  dict_->readSequence(word, ngrams);
+  std::vector<index> ngrams, long_k;
+  dict_->readSequence(word, ngrams, long_k);
   vec.zero();
   for (int i = 0; i < ngrams.size(); i ++) {
     addInputVector(vec, ngrams[i]);
@@ -105,9 +105,9 @@ void FastText::saveVectors() {
     throw std::invalid_argument(
         args_->output + ".vec" + " cannot be opened for saving vectors!");
   }
-  ofs << dict_->nwords() << " " << args_->dim << std::endl;
+  ofs << dict_->nwords() + dict_->nlong() << " " << args_->dim << std::endl;
   Vector vec(args_->dim);
-  for (index i = 0; i < dict_->nwords(); i++) {
+  for (index i = 0; i < dict_->nwords() + dict_->nlong(); i++) {
     std::string word = dict_->getSequence(i);
     getWordVector(vec, i);
     ofs << word << " " << vec << std::endl;
@@ -256,6 +256,10 @@ void FastText::loadModel(std::istream& in) {
   // } else {
   //   model_->setTargetCounts(dict_->getCounts(entry_type::word));
   // }
+}
+
+void FastText::loadIndex(const std::string& filename) {
+  dict_->loadIndex(filename);
 }
 
 void FastText::printInfo(real progress, real loss, std::ostream& log_stream) {
@@ -423,6 +427,7 @@ void FastText::predict(
   real threshold
 ) const {
   std::vector<index> words;
+  // FIXME
   words.reserve(200);
   predictions.clear();
   dict_->getLine(in, words);
@@ -567,7 +572,7 @@ void FastText::trainThread(int32_t threadId) {
   // FIXME
   const int64_t ntokens = size_ / args_->length; // dict_->ntokens();
   int64_t localFragmentCount = 0;
-  std::vector<index> line;
+  std::vector<index> line, long_k, all_k;
   std::vector<int32_t> labels;
   int label;
   while (tokenCount_ < args_->epoch * ntokens) {
@@ -584,16 +589,29 @@ void FastText::trainThread(int32_t threadId) {
         labels.push_back(label);
         // Go to that position
         utils::seek(ifs, pos);
-        if (dict_->readSequence(ifs, line, args_->length, rng)) {
+        if (dict_->readSequence(ifs, line, long_k, args_->length, rng)) {
           localFragmentCount += 1;
-          supervised(model, lr, line, labels);
+
+          all_k.clear();
+          all_k.reserve(line.size() + long_k.size());
+          all_k.insert( all_k.end(), line.begin(), line.end() );
+          all_k.insert( all_k.end(), long_k.begin(), long_k.end() );
+          supervised(model, lr, all_k, labels);
+          
+          // if (localFragmentCount % 100000 == 1) {
+          //   std::cerr << "label: " << label << std::endl;
+          //   for (auto i = long_k.begin(); i != long_k.end(); ++i) {
+          //      std::cerr << *i << " " ;
+          //   }
+          //   std::cerr << std::endl;
+          // }
         }
       }
     } else if (args_->model == model_name::cbow) {
-      localFragmentCount += dict_->getLine(ifs, line, model.rng);
+      //localFragmentCount += dict_->getLine(ifs, line, model.rng);
       cbow(model, lr, line);
     } else if (args_->model == model_name::sg) {
-      localFragmentCount += dict_->getLine(ifs, line, model.rng);
+      //localFragmentCount += dict_->getLine(ifs, line, model.rng);
       skipgram(model, lr, line);
     }
     // FIXME watch out for update rate
@@ -667,7 +685,7 @@ void FastText::train(const Args args) {
     if (args_->pretrainedVectors.size() != 0) {
       loadVectors(args_->pretrainedVectors);
     } else {
-      input_ = std::make_shared<Matrix>(dict_->nwords()+args_->bucket, args_->dim);
+      input_ = std::make_shared<Matrix>(dict_->nwords()+dict_->nlong(), args_->dim);
       input_->uniform(1.0 / args_->dim);
     }
   
