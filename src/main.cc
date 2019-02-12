@@ -47,6 +47,7 @@ void printTestUsage() {
     << "  <model>      model filename\n"
     << "  <test-data>  test data filename (if -, read from stdin)\n"
     << "  <model>      test labels filename\n"
+    << "  <index>      kallisto index\n"
     << "  <k>          (optional; 1 by default) predict top k labels\n"
     << "  <th>         (optional; 0.0 by default) probability threshold\n"
     << std::endl;
@@ -57,6 +58,7 @@ void printPredictUsage() {
     << "usage: fastdna predict[-prob] <model> <test-data> [<k>] [<th>]\n\n"
     << "  <model>      model filename\n"
     << "  <test-data>  test data filename (if -, read from stdin)\n"
+    << "  <index>      kallisto index\n"
     << "  <k>          (optional; 1 by default) predict top k labels\n"
     << "  <th>         (optional; 0.0 by default) probability threshold\n"
     << std::endl;
@@ -171,22 +173,23 @@ void test(const std::vector<std::string>& args) {
 }
 
 void predict(const std::vector<std::string>& args) {
-  if (args.size() < 4 || args.size() > 6) {
+  if (args.size() < 5 || args.size() > 7) {
     printPredictUsage();
     exit(EXIT_FAILURE);
   }
   int32_t k = 1;
   real threshold = 0.0;
   if (args.size() > 4) {
-    k = std::stoi(args[4]);
-    if (args.size() == 6) {
-      threshold = std::stof(args[5]);
+    k = std::stoi(args[5]);
+    if (args.size() == 7) {
+      threshold = std::stof(args[6]);
     }
   }
 
   bool print_prob = args[1] == "predict-prob";
   FastText fasttext;
   fasttext.loadModel(std::string(args[2]));
+  fasttext.loadIndex(args[4]);
 
   std::string infile(args[3]);
   if (infile == "-") {
