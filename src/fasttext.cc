@@ -427,10 +427,20 @@ void FastText::predict(
   real threshold
 ) const {
   std::vector<index> words;
-  // FIXME
-  words.reserve(200);
+  // FIXME, guesses that the sequence length is same as training
+  words.reserve(args_->length);
   predictions.clear();
   dict_->getLine(in, words);
+  // DEBUG
+  // if (threshold < 0) {
+  //   std::cerr << words.size() - args_->length - args_->minn + 1 << std::endl;
+  //   // for (auto i = words.begin(); i != words.end(); ++i) {
+  //   //      std::cerr << *i << " " ;
+  //   //   }
+  //   // std::cerr << std::endl;
+  //   threshold = 0;
+  // }
+
   if (words.empty()) return;
   Vector hidden(args_->dim);
   Vector output(dict_->nlabels());
@@ -572,7 +582,7 @@ void FastText::trainThread(int32_t threadId) {
   // FIXME
   const int64_t ntokens = size_ / args_->length; // dict_->ntokens();
   int64_t localFragmentCount = 0;
-  std::vector<index> line, long_k, all_k;
+  std::vector<index> line;
   std::vector<int32_t> labels;
   int label;
   while (tokenCount_ < args_->epoch * ntokens) {
@@ -589,18 +599,13 @@ void FastText::trainThread(int32_t threadId) {
         labels.push_back(label);
         // Go to that position
         utils::seek(ifs, pos);
-        if (dict_->readSequence(ifs, line, long_k, args_->length, rng)) {
+        if (dict_->readSequence(ifs, line, args_->length, rng)) {
           localFragmentCount += 1;
-
-          all_k.clear();
-          all_k.reserve(line.size() + long_k.size());
-          all_k.insert( all_k.end(), line.begin(), line.end() );
-          all_k.insert( all_k.end(), long_k.begin(), long_k.end() );
-          supervised(model, lr, all_k, labels);
-          
+          supervised(model, lr, line, labels);
+          // Debugging:
           // if (localFragmentCount % 100000 == 1) {
           //   std::cerr << "label: " << label << std::endl;
-          //   for (auto i = long_k.begin(); i != long_k.end(); ++i) {
+          //   for (auto i = line.begin(); i != line.end(); ++i) {
           //      std::cerr << *i << " " ;
           //   }
           //   std::cerr << std::endl;

@@ -22,14 +22,15 @@ fastdna=../fastdna
 
 threads=4 # number of threads for training
 d=10 # embedding dimension
-k=12 # k-mer length
+k=10 # k-mer length
 K=13 # long k-mer length
-e=50 # number of epochs
+e=1 # number of epochs
 L=100 # training read length,
 
 model_name="fdna_k${k}_d${d}_e${e}"
 model_path="$output_path/$model_name"
 index="$dataset_path/kallisto_index_$db_$K"
+index="$output_path/kallisto_index_$db"
 
 # Train a supervised model
 $fastdna supervised -input $train_dataset -labels $train_labels -output $model_path -minn $k -dim $d -epoch $e -thread $threads -loadIndex $index

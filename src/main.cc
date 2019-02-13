@@ -179,7 +179,7 @@ void predict(const std::vector<std::string>& args) {
   }
   int32_t k = 1;
   real threshold = 0.0;
-  if (args.size() > 4) {
+  if (args.size() > 5) {
     k = std::stoi(args[5]);
     if (args.size() == 7) {
       threshold = std::stof(args[6]);

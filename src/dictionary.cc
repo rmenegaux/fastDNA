@@ -218,8 +218,9 @@ index Dictionary::computeIndex(index kmer,
 
 bool Dictionary::readSequence(std::istream& in,
                               std::vector<index>& ngrams,
-                              std::vector<index>& long_k,
+                              std::vector<index>& contigs,
                               const int length,
+                              bool add_noise,
                               std::mt19937_64& rng) const {
   // If length is -1, read all sequence
 
@@ -231,11 +232,11 @@ bool Dictionary::readSequence(std::istream& in,
   int8_t val, val_reverse;
 
   const int K = kmer_index_.k;
-  std::string longkmer_str;
-  longkmer_str.reserve(K);
-  Kmer longkmer;
+  std::string kmer_str;
+  kmer_str.reserve(K);
+  Kmer kmer;
   ngrams.clear();
-  long_k.clear();
+  contigs.clear();
 
   std::streambuf& sb = *in.rdbuf();
 
@@ -244,16 +245,7 @@ bool Dictionary::readSequence(std::istream& in,
 
   int i = 0;
   while (length == -1 || i < length) {
-    if (i >= k) {
-      ngrams.push_back(computeIndex(index, index_reverse, k));
-    }
-    if (i >= K) {
-      auto search = kmer_index_.kmap.find(longkmer.rep());
-      if (search != kmer_index_.kmap.end()) {
-        KmerEntry entry = search->second;
-        long_k.push_back(nwords() + entry.contig);
-      }
-    }
+
     c = sb.sbumpc();
     if (c == BOS || c == EOF) {
       // Reached end of sequence
@@ -275,27 +267,33 @@ bool Dictionary::readSequence(std::istream& in,
       default : val = -1;
     }
     if (val >= 0) {
+      // char c = s_[j] & 0xDF; // mask lowercase bit
+      // FIXME: take noise into account here as well?
+
+      if (add_noise) {
+        noise = uniform(rng);
+        // random mutation
+        if (noise <= args_->noise) {
+          val = noise % 4;
+          switch(val) {
+            case 0: { c = 'A'; val_reverse = 3; break; }
+            case 1: { c = 'C'; val_reverse = 2; break; }
+            case 2: { c = 'G'; val_reverse = 1; break; }
+            case 3: { c = 'T'; val_reverse = 0; break; }
+          }
+        }
+      }
+
       c = toupper(c);
       if (i < K) {
-        longkmer_str.push_back(c);
+        kmer_str.push_back(c);
         if (i == K-1) {
-          longkmer.set_kmer(longkmer_str.c_str());
+          kmer.set_kmer(kmer_str.c_str());
         }
       } else {
-        longkmer.forwardBase(c);
+        kmer = kmer.forwardBase(c);
       }
-      
-      noise = uniform(rng);
-      // random mutation
-      if (noise <= args_->noise) {
-        val = noise % 4;
-        switch(val) {
-          case 0: {val_reverse = 3; break;}
-          case 1: {val_reverse = 2; break;}
-          case 2: {val_reverse = 1; break;}
-          case 3: {val_reverse = 0; break;}
-        }
-      }
+
       index *=  4;
       index += val;
       if (i < k) {
@@ -308,124 +306,74 @@ bool Dictionary::readSequence(std::istream& in,
         index_reverse &= mask;
       }
       i++;
+      if (i >= k) {
+        ngrams.push_back(computeIndex(index, index_reverse, k));
+      }
+      if (i >= K) {
+        pushKmer(contigs, kmer);
+      }
     }
   }
-  if (i >= k) {
-    ngrams.push_back(computeIndex(index, index_reverse, k));
-      if (i >= K) {
-          auto search = kmer_index_.kmap.find(longkmer.rep());
-          if (search != kmer_index_.kmap.end()) {
-              KmerEntry entry = search->second;
-              long_k.push_back(nwords() + entry.contig);
-          }
-      }
-    return true;
-  }
-  return false;
+  return (i >= k);
 }
 
 bool Dictionary::readSequence(std::istream& in,
                               std::vector<index>& ngrams,
                               const int length) const {
-  // If length is -1, read all sequence
-
-  const int k = args_->minn;
-  const int K = kmer_index_.k;
-  std::string longkmer_str;
-  longkmer_str.reserve(K);
-  Kmer longkmer;
-  // mask to keep the index values between 0 and 4**k-1
-  index mask = (1 << 2*k) - 1;
-  index index = 0, index_reverse = 0;
-  int c;
-  int8_t val, val_reverse;
-
-  ngrams.clear();
-
-  std::streambuf& sb = *in.rdbuf();
-
-  int i = 0;
-  while (length == -1 || i < length) {
-    if (i >= k) {
-      ngrams.push_back(computeIndex(index, index_reverse, k));
-      if (i >= K) {
-        auto search = kmer_index_.kmap.find(longkmer.rep());
-        if (search != kmer_index_.kmap.end()) {
-          KmerEntry entry = search->second;
-          ngrams.push_back(nwords() + entry.contig);
-        }
-      }
-    }
-    c = sb.sbumpc();
-    if (c == BOS || c == EOF) {
-      // Reached end of sequence
-      if (c == BOS) {
-        sb.sungetc();
-      }
-      return (i >= k);
-    }
-    // c = toupper(c);
-    switch(c) {
-      case 'A' :
-      case 'a' : { val = 0, val_reverse = 3; break;}
-      case 'C' :
-      case 'c' : { val = 1, val_reverse = 2; break;}
-      case 'g' :
-      case 'G' : { val = 2, val_reverse = 1; break;}
-      case 't' :
-      case 'T' : { val = 3, val_reverse = 0; break;}
-      default : val = -1;
-    }
-    if (val >= 0) {
-      c = toupper(c);
-      if (i < K) {
-        longkmer_str.push_back(c);
-        if (i == K-1) {
-          longkmer.set_kmer(longkmer_str.c_str());
-        }
-      } else {
-        longkmer.forwardBase(c);
-      }
-      index *=  4;
-      index += val;
-      if (i < k) {
-        index_reverse += val_reverse << 2*i;
-      }
-      else {
-        index_reverse /= 4;
-        index_reverse += val_reverse << 2*(k-1);
-        index &= mask;
-        index_reverse &= mask;
-      }
-      i++;
-    }
+  // Concatenate indices of short kmers and contigs
+  // No noise
+  std::vector<index> contigs;
+  std::mt19937_64 dummy(0);
+  bool read = readSequence(in, ngrams, contigs, length, false, dummy);
+  //FIXME use std::copy
+  if (args_->minn > 1) {
+    ngrams.reserve(ngrams.size() + contigs.size());
+    ngrams.insert( ngrams.end(), contigs.begin(), contigs.end() );
   }
-  if (i >= k) {
-    ngrams.push_back(computeIndex(index, index_reverse, k));
-    if (i >= K) {
-      auto search = kmer_index_.kmap.find(longkmer.rep());
-      if (search != kmer_index_.kmap.end()) {
-        KmerEntry entry = search->second;
-        ngrams.push_back(nwords() + entry.contig);
-      }
-    }
-    return true;
+  return read;
+}
+
+bool Dictionary::readSequence(std::istream& in,
+                              std::vector<index>& ngrams,
+                              const int length,
+                              std::mt19937_64& rng) const {
+  // Concatenate indices of short kmers and contigs
+  // Add noise to the short kmers
+  std::vector<index> contigs;
+  bool read = readSequence(in, ngrams, contigs, length, true, rng);
+  //FIXME use std::copy
+  if (args_->minn > 1) {
+    ngrams.reserve(ngrams.size() + contigs.size());
+    ngrams.insert( ngrams.end(), contigs.begin(), contigs.end() );
   }
-  return false;
+  return read;
 }
 
 bool Dictionary::readSequence(std::string& word,
                             std::vector<index>& ngrams,
-                            std::vector<index>& long_k) const {
+                            std::vector<index>& contigs) const {
   std::istringstream in(word);
   //FIXME
   return readSequence(in, ngrams, word.size());
 }
 
+// build kmeriterator
+bool Dictionary::pushKmer(std::vector<index>& ngrams,
+                          const Kmer& kmer) const {
+  // Searches for kmer in the kallisto index and pushes
+  // its (contig) index to ngrams
+  auto search = kmer_index_.kmap.find(kmer.rep());
+  bool found = (search != kmer_index_.kmap.end());
+  if (found) {
+    KmerEntry entry = search->second;
+    ngrams.push_back(nwords() + entry.contig);
+  }
+  return found;
+}
+
 std::string Dictionary::getSequence(index ind) const {
   //  Returns the first k-mer in lexicographical order from the pair of possible k-mers
   std::string seq;
-  // std::cerr << "dude" << std::endl;
   getSequenceRCI(seq, ind, args_->minn);
   // std::cerr << ind << ": " << seq << std::endl;
   return seq; // getSequenceRCI(ind, args_->minn);
@@ -590,49 +538,49 @@ void Dictionary::reset(std::istream& in) const {
 
 int32_t Dictionary::getLine(std::istream& in,
                             std::vector<index>& words,
-                            std::vector<index>& long_k,
+                            std::vector<index>& contigs,
                             std::minstd_rand& rng) const {
-  // FIXME
-  std::uniform_real_distribution<> uniform(0, 1);
-  std::string token;
-  std::vector<index> ngrams;
+  // // FIXME
+  // std::uniform_real_distribution<> uniform(0, 1);
+  // std::string token;
+  // std::vector<index> ngrams;
 
-  reset(in);
-  words.clear();
-  //FIXME
-  readSequence(in, words, -1);
+  // reset(in);
+  // words.clear();
+  // //FIXME
+  // readSequence(in, words, -1);
 
-  for(int i = 0; i < ngrams.size(); i++) {
-    if (!discard(ngrams[i], uniform(rng))) {
-      words.push_back(ngrams[i]);
-    }
-  }
-  return ngrams.size();
+  // for(int i = 0; i < ngrams.size(); i++) {
+  //   if (!discard(ngrams[i], uniform(rng))) {
+  //     words.push_back(ngrams[i]);
+  //   }
+  // }
+  // return ngrams.size();
+  return 0;
 }
 
 int32_t Dictionary::getLine(std::istream& in,
                             std::vector<index>& ngrams,
                             std::vector<int32_t>& labels) const {
-  std::string label;
-  std::vector<index> long_k;
+  // std::string label;
 
-  reset(in);
-  std::streampos pos = in.tellg();
-  ngrams.clear();
-  labels.clear();
-  //FIXME
-  readSequence(in, ngrams, -1);
-  std::getline(in, label);
-  // if (ngrams.empty() || label.size() < 9) {
-  //   in.seekg(pos);
-  //   std::string line;
-  //   std::getline(in, line);
-  //   std::cerr << line << " label " << label << std::endl;
+  // reset(in);
+  // std::streampos pos = in.tellg();
+  // ngrams.clear();
+  // labels.clear();
+  // //FIXME
+  // readSequence(in, ngrams, -1);
+  // std::getline(in, label);
+  // // if (ngrams.empty() || label.size() < 9) {
+  // //   in.seekg(pos);
+  // //   std::string line;
+  // //   std::getline(in, line);
+  // //   std::cerr << line << " label " << label << std::endl;
+  // // }
+  // auto it = label2int_.find(label.substr(9));
+  // if (it != label2int_.end()) {
+  //   labels.push_back(it->second);
   // }
-  auto it = label2int_.find(label.substr(9));
-  if (it != label2int_.end()) {
-    labels.push_back(it->second);
-  }
   return 0;
 }
 
@@ -654,19 +602,14 @@ int32_t Dictionary::getLine(std::istream& fasta,
                             std::istream& labelfile,
                             std::vector<index>& ngrams,
                             std::vector<int32_t>& labels) const {
-  std::string label, header;
-
-  if (fasta.peek() == BOS) {
-    std::getline(fasta, header);
-  }
-  ngrams.clear();
+  std::string label;
   labels.clear();
-  readSequence(fasta, ngrams, -1);
   std::getline(labelfile, label);
   auto it = label2int_.find(label);
   if (it != label2int_.end()) {
     labels.push_back(it->second);
   }
+  getLine(fasta, ngrams);
   return 0;
 }
 

@@ -94,7 +94,7 @@ class Dictionary {
     int32_t getLine(std::istream&, std::vector<index>&, std::vector<int32_t>&)
         const;
     int32_t getLine(std::istream&, std::vector<index>&,
-                    std::vector<index>& long_k,
+                    std::vector<index>& contigs,
                     std::minstd_rand&) const;
     int32_t getLine(std::istream& fasta,
                     std::vector<index>& ngrams) const;
@@ -113,16 +113,29 @@ class Dictionary {
     std::string getSequence(index i) const;
     void getSequenceRCI(std::string& seq, index index, const int8_t k) const;
     void getSequenceClassic(std::string& seq, index index, const int8_t k) const;
+    // Core function
     bool readSequence(
         std::istream& in, std::vector<index>& ngrams,
-        const int length) const;
+        std::vector<index>& contigs,
+        const int length,
+        bool add_noise,
+        std::mt19937_64&) const;
+    // Read with noise
     bool readSequence(
-        std::istream& in, std::vector<index>& ngrams,
-        std::vector<index>& long_k,
+        std::istream& in,
+        std::vector<index>& ngrams,
         const int length,
         std::mt19937_64&) const;
+    // Read with no noise
+    bool readSequence(
+        std::istream& in,
+        std::vector<index>& ngrams,
+        const int length) const;
+    // Read a string
     bool readSequence(std::string& word,
                       std::vector<index>& ngrams,
-                      std::vector<index>& long_k) const;
+                      std::vector<index>& contigs) const;
+    bool pushKmer(std::vector<index>& ngrams,
+                  const Kmer& kmer) const;
 };
 }
