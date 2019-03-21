@@ -582,7 +582,7 @@ void FastText::trainThread(int32_t threadId) {
   // FIXME
   const int64_t ntokens = size_ / args_->length; // dict_->ntokens();
   int64_t localFragmentCount = 0;
-  std::vector<index> line;
+  std::vector<index> kmers, contigs;
   std::vector<int32_t> labels;
   int label;
   while (tokenCount_ < args_->epoch * ntokens) {
@@ -599,9 +599,10 @@ void FastText::trainThread(int32_t threadId) {
         labels.push_back(label);
         // Go to that position
         utils::seek(ifs, pos);
-        if (dict_->readSequence(ifs, line, args_->length, rng)) {
+        if (dict_->readSequence(ifs, kmers, contigs, args_->length, rng)) {
           localFragmentCount += 1;
-          supervised(model, lr, line, labels);
+          supervised(model, lr, contigs, labels);
+          supervised(model, lr, kmers, labels);
           // Debugging:
           // if (localFragmentCount % 100000 == 1) {
           //   std::cerr << "label: " << label << std::endl;
@@ -614,10 +615,10 @@ void FastText::trainThread(int32_t threadId) {
       }
     } else if (args_->model == model_name::cbow) {
       //localFragmentCount += dict_->getLine(ifs, line, model.rng);
-      cbow(model, lr, line);
+      // cbow(model, lr, line);
     } else if (args_->model == model_name::sg) {
       //localFragmentCount += dict_->getLine(ifs, line, model.rng);
-      skipgram(model, lr, line);
+      // skipgram(model, lr, line);
     }
     // FIXME watch out for update rate
     if (localFragmentCount > args_->lrUpdateRate) {

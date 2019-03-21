@@ -335,17 +335,17 @@ bool Dictionary::readSequence(std::istream& in,
 
 bool Dictionary::readSequence(std::istream& in,
                               std::vector<index>& ngrams,
+                              std::vector<index>& contigs,
                               const int length,
                               std::mt19937_64& rng) const {
   // Concatenate indices of short kmers and contigs
   // Add noise to the short kmers
-  std::vector<index> contigs;
   bool read = readSequence(in, ngrams, contigs, length, true, rng);
   //FIXME use std::copy
-  if (args_->minn > 1) {
-    ngrams.reserve(ngrams.size() + contigs.size());
-    ngrams.insert( ngrams.end(), contigs.begin(), contigs.end() );
-  }
+  // if (args_->minn > 1) {
+  //   ngrams.reserve(ngrams.size() + contigs.size());
+  //   ngrams.insert( ngrams.end(), contigs.begin(), contigs.end() );
+  // }
   return read;
 }
 
