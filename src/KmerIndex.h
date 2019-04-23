@@ -93,11 +93,8 @@ struct DBGraph {
 
 
 struct KmerIndex {
-  //KmerIndex(const ProgramOptions& opt) : k(opt.k), num_trans(0), skip(opt.skip), target_seqs_loaded(false) {
-  KmerIndex() : k(31), num_trans(0), skip(1), target_seqs_loaded(false) {
-    //LoadTranscripts(opt.transfasta);
-  }
-
+  KmerIndex(const ProgramOptions& opt) : k(opt.k), num_trans(0), skip(opt.skip), target_seqs_loaded(false) {  }
+  KmerIndex() : k(31), num_trans(0), skip(1), target_seqs_loaded(false) {}
   ~KmerIndex() {}
 
   void match(const char *s, int l, std::vector<std::pair<KmerEntry, int>>& v) const;

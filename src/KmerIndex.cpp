@@ -8,7 +8,7 @@
 
 #ifndef KSEQ_INIT_READY
 #define KSEQ_INIT_READY
-// KSEQ_INIT(gzFile, gzread)
+KSEQ_INIT(gzFile, gzread)
 #endif
 
 // helper functions
@@ -67,115 +67,115 @@ std::string revcomp(const std::string s) {
 }
 
 void KmerIndex::BuildTranscripts(const ProgramOptions& opt) {
-  // // read input
-  // std::unordered_set<std::string> unique_names;
-  // int k = opt.k;
-  // for (auto& fasta : opt.transfasta) {
-  //   std::cerr << "[build] loading fasta file " << fasta
-  //             << std::endl;
-  // }
-  // std::cerr << "[build] k-mer length: " << k << std::endl;
+  // read input
+  std::unordered_set<std::string> unique_names;
+  int k = opt.k;
+  for (auto& fasta : opt.transfasta) {
+    std::cerr << "[build] loading fasta file " << fasta
+              << std::endl;
+  }
+  std::cerr << "[build] k-mer length: " << k << std::endl;
 
 
-  // std::vector<std::string> seqs;
+  std::vector<std::string> seqs;
 
-  // // read fasta file  
-  // gzFile fp = 0;
-  // kseq_t *seq;
-  // int l = 0;
-  // std::mt19937 gen(42);
-  // int countNonNucl = 0;
-  // int countUNuc = 0;
-  // int polyAcount = 0;
+  // read fasta file  
+  gzFile fp = 0;
+  kseq_t *seq;
+  int l = 0;
+  std::mt19937 gen(42);
+  int countNonNucl = 0;
+  int countUNuc = 0;
+  int polyAcount = 0;
 
-  // for (auto& fasta : opt.transfasta) {
-  //   fp = gzopen(fasta.c_str(), "r");
-  //   seq = kseq_init(fp);
-  //   while (true) {
-  //     l = kseq_read(seq);
-  //     if (l <= 0) {
-  //       break;
-  //     }
-  //     seqs.emplace_back(seq->seq.s);
-  //     std::string& str = *seqs.rbegin();
-  //     auto n = str.size();
-  //     for (auto i = 0; i < n; i++) {
-  //       char c = str[i];
-  //       c = ::toupper(c);
-  //       if (c=='U') {
-  //         str[i] = 'T';
-  //         countUNuc++;
-  //       } else if (c !='A' && c != 'C' && c != 'G' && c != 'T') {
-  //         str[i] = Dna(gen()); // replace with pseudorandom string
-  //         countNonNucl++;
-  //       }
-  //     }
-  //     std::transform(str.begin(), str.end(),str.begin(), ::toupper);
+  for (auto& fasta : opt.transfasta) {
+    fp = gzopen(fasta.c_str(), "r");
+    seq = kseq_init(fp);
+    while (true) {
+      l = kseq_read(seq);
+      if (l <= 0) {
+        break;
+      }
+      seqs.emplace_back(seq->seq.s);
+      std::string& str = *seqs.rbegin();
+      auto n = str.size();
+      for (auto i = 0; i < n; i++) {
+        char c = str[i];
+        c = ::toupper(c);
+        if (c=='U') {
+          str[i] = 'T';
+          countUNuc++;
+        } else if (c !='A' && c != 'C' && c != 'G' && c != 'T') {
+          str[i] = Dna(gen()); // replace with pseudorandom string
+          countNonNucl++;
+        }
+      }
+      std::transform(str.begin(), str.end(),str.begin(), ::toupper);
 
-  //     if (str.size() >= 10 && str.substr(str.size()-10,10) == "AAAAAAAAAA") {
-  //       // clip off polyA tail
-  //       //std::cerr << "[index] clipping off polyA tail" << std::endl;
-  //       polyAcount++;
-  //       int j;
-  //       for (j = str.size()-1; j >= 0 && str[j] == 'A'; j--) {}
-  //       str = str.substr(0,j+1);
-  //     }
+      if (str.size() >= 10 && str.substr(str.size()-10,10) == "AAAAAAAAAA") {
+        // clip off polyA tail
+        //std::cerr << "[index] clipping off polyA tail" << std::endl;
+        polyAcount++;
+        int j;
+        for (j = str.size()-1; j >= 0 && str[j] == 'A'; j--) {}
+        str = str.substr(0,j+1);
+      }
 
     
-  //     target_lens_.push_back(seq->seq.l);
-  //     std::string name(seq->name.s);
-  //     size_t p = name.find(' ');
-  //     if (p != std::string::npos) {
-  //       name = name.substr(0,p);
-  //     }
+      target_lens_.push_back(seq->seq.l);
+      std::string name(seq->name.s);
+      size_t p = name.find(' ');
+      if (p != std::string::npos) {
+        name = name.substr(0,p);
+      }
 
-  //     if (unique_names.find(name) != unique_names.end()) {
-  //       if (!opt.make_unique) {
-  //         std::cerr << "Error: repeated name in FASTA file " << fasta << "\n" << name << "\n\n" << "Run with --make-unique to replace repeated names with unique names" << std::endl;
-  //         exit(1);
-  //       } else {
-  //         for (int i = 1; ; i++) { // potential bug if you have more than 2^32 repeated names
-  //           std::string new_name = name + "_" + std::to_string(i);
-  //           if (unique_names.find(new_name) == unique_names.end()) {
-  //             name = new_name;
-  //             break;
-  //           }
-  //         }
-  //       }
-  //     }
-  //     unique_names.insert(name);
-  //     target_names_.push_back(name);
+      if (unique_names.find(name) != unique_names.end()) {
+        if (!opt.make_unique) {
+          std::cerr << "Error: repeated name in FASTA file " << fasta << "\n" << name << "\n\n" << "Run with --make-unique to replace repeated names with unique names" << std::endl;
+          exit(1);
+        } else {
+          for (int i = 1; ; i++) { // potential bug if you have more than 2^32 repeated names
+            std::string new_name = name + "_" + std::to_string(i);
+            if (unique_names.find(new_name) == unique_names.end()) {
+              name = new_name;
+              break;
+            }
+          }
+        }
+      }
+      unique_names.insert(name);
+      target_names_.push_back(name);
 
-  //   }
-  //   gzclose(fp);
-  //   fp=0;
-  // }
+    }
+    gzclose(fp);
+    fp=0;
+  }
 
-  // if (polyAcount > 0) {
-  //   std::cerr << "[build] warning: clipped off poly-A tail (longer than 10)" << std::endl << "        from " << polyAcount << " target sequences" << std::endl;
-  // }
+  if (polyAcount > 0) {
+    std::cerr << "[build] warning: clipped off poly-A tail (longer than 10)" << std::endl << "        from " << polyAcount << " target sequences" << std::endl;
+  }
 
   
-  // if (countNonNucl > 0) {
-  //   std::cerr << "[build] warning: replaced " << countNonNucl << " non-ACGUT characters in the input sequence" << std::endl << "        with pseudorandom nucleotides" << std::endl;
-  // }
-  // if (countUNuc > 0) {
-  //   std::cerr << "[build] warning: replaced " << countUNuc << " U characters with Ts" << std::endl;
-  // }
+  if (countNonNucl > 0) {
+    std::cerr << "[build] warning: replaced " << countNonNucl << " non-ACGUT characters in the input sequence" << std::endl << "        with pseudorandom nucleotides" << std::endl;
+  }
+  if (countUNuc > 0) {
+    std::cerr << "[build] warning: replaced " << countUNuc << " U characters with Ts" << std::endl;
+  }
   
-  // num_trans = seqs.size();
+  num_trans = seqs.size();
   
-  // // for each target, create it's own equivalence class
-  // for (int i = 0; i < seqs.size(); i++ ) {
-  //   std::vector<int> single(1,i);
-  //   //ecmap.insert({i,single});
-  //   ecmap.push_back(single);
-  //   ecmapinv.insert({single,i});
-  // }
+  // for each target, create its own equivalence class
+  for (int i = 0; i < seqs.size(); i++ ) {
+    std::vector<int> single(1,i);
+    //ecmap.insert({i,single});
+    ecmap.push_back(single);
+    ecmapinv.insert({single,i});
+  }
   
-  // BuildDeBruijnGraph(opt, seqs);
-  // BuildEquivalenceClasses(opt, seqs);
-  // //BuildEdges(opt);
+  BuildDeBruijnGraph(opt, seqs);
+  BuildEquivalenceClasses(opt, seqs);
+  //BuildEdges(opt);
 
 }
 

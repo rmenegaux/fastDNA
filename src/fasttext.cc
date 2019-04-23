@@ -457,6 +457,7 @@ void FastText::predict(
   bool print_prob,
   real threshold
 ) {
+
   std::vector<std::pair<real,std::string>> predictions;
   while (in.peek() != EOF) {
     predictions.clear();

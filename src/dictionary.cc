@@ -324,12 +324,16 @@ bool Dictionary::readSequence(std::istream& in,
   // No noise
   std::vector<index> contigs;
   std::mt19937_64 dummy(0);
-  bool read = readSequence(in, ngrams, contigs, length, false, dummy);
+  bool read = readSequence(in, contigs, ngrams, length, false, dummy);
   //FIXME use std::copy
   if (args_->minn > 1) {
     ngrams.reserve(ngrams.size() + contigs.size());
     ngrams.insert( ngrams.end(), contigs.begin(), contigs.end() );
   }
+  // if (ngrams.empty()) {
+  //   ngrams.reserve(ngrams.size() + contigs.size());
+  //   ngrams.insert( ngrams.end(), contigs.begin(), contigs.end() );
+  // }
   return read;
 }
 
