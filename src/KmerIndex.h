@@ -48,26 +48,28 @@ struct SortedVectorHasher {
 
 struct KmerEntry {
   int32_t contig; // id of contig
-  uint32_t _pos; // 0-based forward distance to EC-junction
-  int32_t contig_length;
+  // uint32_t _pos; // 0-based forward distance to EC-junction
+  // int32_t contig_length;
 
-  KmerEntry() : contig(-1), _pos(0xFFFFFFF), contig_length(0) {}
-  KmerEntry(int id, int length, int pos, bool isFw) : contig(id), contig_length(length) {
-    setPos(pos);
-    setDir(isFw);
-  }
+  // KmerEntry() : contig(-1), _pos(0xFFFFFFF), contig_length(0) {}
+  // KmerEntry(int id, int length, int pos, bool isFw) : contig(id), contig_length(length) {
+  //   setPos(pos);
+  //   setDir(isFw);
+  // }
 
-  inline int getPos() const {return (_pos & 0x0FFFFFFF);}
-  inline int isFw() const  {return (_pos & 0xF0000000) == 0; }
-  inline void setPos(int p) {_pos = (_pos & 0xF0000000) | (p & 0x0FFFFFFF);}
-  inline void setDir(bool _isFw) {_pos = (_pos & 0x0FFFFFFF) | ((_isFw) ? 0 : 0xF0000000);}
-  inline int getDist(bool fw) const {
-    if (isFw() == fw) {
-      return (contig_length - 1 - getPos());
-    } else {
-      return getPos();
-    }
-  }
+  // inline int getPos() const {return (_pos & 0x0FFFFFFF);}
+  // inline int isFw() const  {return (_pos & 0xF0000000) == 0; }
+  // inline void setPos(int p) {_pos = (_pos & 0xF0000000) | (p & 0x0FFFFFFF);}
+  // inline void setDir(bool _isFw) {_pos = (_pos & 0x0FFFFFFF) | ((_isFw) ? 0 : 0xF0000000);}
+  // inline int getDist(bool fw) const {
+  //   if (isFw() == fw) {
+  //     return (contig_length - 1 - getPos());
+  //   } else {
+  //     return getPos();
+  //   }
+  // }
+  KmerEntry() : contig(-1) {}
+  KmerEntry(int id) : contig(id) {}
 };
 
 struct ContigToTranscript {
@@ -103,8 +105,6 @@ struct KmerIndex {
   std::vector<int> intersect(int ec, const std::vector<int>& v) const;
 
 
-
-
   void BuildTranscripts(const ProgramOptions& opt);
   void BuildDeBruijnGraph(const ProgramOptions& opt, const std::vector<std::string>& seqs);
   void BuildEquivalenceClasses(const ProgramOptions& opt, const std::vector<std::string>& seqs);
@@ -134,7 +134,7 @@ struct KmerIndex {
   EcMap ecmap;
   DBGraph dbGraph;
   std::unordered_map<std::vector<int>, int, SortedVectorHasher> ecmapinv;
-  const size_t INDEX_VERSION = 10; // increase this every time you change the fileformat
+  const size_t INDEX_VERSION = 11; // increase this every time you change the fileformat
 
   std::vector<int> target_lens_;
 

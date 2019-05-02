@@ -11,8 +11,8 @@
 
 template<typename T, typename Hash = KmerHash>
 struct KmerHashTable {
-  using value_type = std::pair<Kmer, T>;
-  using key_type = Kmer;
+  using value_type = std::pair<size_t, T>;
+  using key_type = size_t;
   using mapped_type = T;
 
   Hash hasher;
@@ -48,7 +48,7 @@ struct KmerHashTable {
     void find_first() {
       h = 0;
       if (ht->table != nullptr && ht->size_>0) {
-        Kmer& km = ht->table[h].first;
+        size_t km = ht->table[h].first;
         if (km == ht->empty.first || km == ht->deleted.first) {
           operator++();
         }
@@ -67,7 +67,7 @@ struct KmerHashTable {
       }
       ++h;
       for (; h < ht->size_; ++h) {
-        Kmer& km = ht->table[h].first;
+        size_t km = ht->table[h].first;
         if (km != ht->empty.first && km != ht->deleted.first) {
           break;
         }
@@ -87,14 +87,18 @@ struct KmerHashTable {
 
 
   KmerHashTable(const Hash& h = Hash() ) : hasher(h), table(nullptr), size_(0), pop(0) {
-    empty.first.set_empty();
-    deleted.first.set_deleted();
+    // empty.first.set_empty();
+    // deleted.first.set_deleted();
+    empty.first = -1;
+    deleted.first = -2;
     init_table(1024);
   }
 
   KmerHashTable(size_t sz, const Hash& h = Hash() ) : hasher(h), table(nullptr), size_(0), pop(0) {
-    empty.first.set_empty();
-    deleted.first.set_deleted();
+    // empty.first.set_empty();
+    // deleted.first.set_deleted();
+    empty.first = -1;
+    deleted.first = -2;
     init_table((size_t) (1.2*sz));
   }
 
@@ -129,13 +133,14 @@ struct KmerHashTable {
   }
 
   iterator find(const Kmer& key) {
-    size_t h = hasher(key) & (size_-1);
+    size_t full_h = hasher(key);
+    size_t h = full_h & (size_-1);
 
-    for (;; h =  (h+1!=size_ ? h+1 : 0)) {
+    for (;; h = (h+1!=size_ ? h+1 : 0)) {
       if (table[h].first == empty.first) {
         // empty slot, not in table
         return iterator(this);
-      } else if (table[h].first == key) {
+      } else if (table[h].first == full_h) {
         // same key, found
         return iterator(this, h);
       } // if it is deleted, we still have to continue
@@ -144,13 +149,14 @@ struct KmerHashTable {
 
   const_iterator find(const Kmer& key) const {
 
-    size_t h = hasher(key) & (size_-1);
+    size_t full_h = hasher(key);
+    size_t h = full_h & (size_-1);
 
     for (;; h =  (h+1!=size_ ? h+1 : 0)) {
       if (table[h].first == empty.first) {
         // empty slot, not in table
         return const_iterator(this);
-      } else if (table[h].first == key) {
+      } else if (table[h].first == full_h) {
         // same key, found
         return const_iterator(this, h);
       }
@@ -177,6 +183,36 @@ struct KmerHashTable {
     return oldpop-pop;
   }
 
+  // std::pair<iterator,bool> insert(const value_type& val) {
+  std::pair<iterator,bool> insert(const Kmer& km, const mapped_type& second) {
+    //cerr << "inserting " << val.first.toString() << " = " << val.second << endl;
+    if ((pop + (pop>>4))> size_) { // if more than 80% full
+      //cerr << "-- triggered resize--" << endl;
+      reserve(2*size_, false);
+    }
+
+    size_t full_h = hasher(km);
+    value_type val = {full_h, second};
+
+    size_t h = full_h & (size_-1);
+    //cerr << " hash value = " << h << endl;
+    for (;; h = (h+1!=size_ ? h+1 : 0)) {
+      //cerr << "  lookup at " << h << endl;
+      if (table[h].first == empty.first || table[h].first == deleted.first) {
+        //cerr << "   found empty slot" << endl;
+        // empty slot, insert here
+        table[h] = val;
+        ++pop; // new table
+        return {iterator(this, h), true};
+      } else if (table[h].first == val.first) {
+        // same key, update value
+        //cerr << "   found key already here " << table[h].first.toString() << " = " << table[h].second <<  endl;
+        return {iterator(this, h), false};
+      }
+    }
+
+  }
+
   std::pair<iterator,bool> insert(const value_type& val) {
     //cerr << "inserting " << val.first.toString() << " = " << val.second << endl;
     if ((pop + (pop>>4))> size_) { // if more than 80% full
@@ -184,7 +220,8 @@ struct KmerHashTable {
       reserve(2*size_, false);
     }
 
-    size_t h = hasher(val.first) & (size_-1);
+
+    size_t h = val.first & (size_-1);
     //cerr << " hash value = " << h << endl;
     for (;; h = (h+1!=size_ ? h+1 : 0)) {
       //cerr << "  lookup at " << h << endl;

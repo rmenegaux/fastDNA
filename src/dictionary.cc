@@ -39,6 +39,7 @@ Dictionary::Dictionary(std::shared_ptr<Args> args, std::istream& in) : args_(arg
 
 // Load kallisto index
 void Dictionary::loadIndex(const std::string& filename) {
+  std::cerr << kmer_index_.INDEX_VERSION << std::endl;
   kmer_index_.load(filename);
   // std::cerr << "[index] size of index object " << sizeof(kmer_index_) << std::endl;
   std::vector<Contig>().swap(kmer_index_.dbGraph.contigs);

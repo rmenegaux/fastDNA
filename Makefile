@@ -12,29 +12,29 @@ CXXFLAGS = -pthread -std=c++0x -march=native
 OBJS = common.o hash.o Kmer.o KmerIterator.o KmerIndex.o args.o dictionary.o productquantizer.o matrix.o qmatrix.o vector.o model.o utils.o fasttext.o
 INCLUDES = -I.
 
-opt: CXXFLAGS += -O3 -funroll-loops -DNDEBUG -lz
+opt: CXXFLAGS += -O3 -funroll-loops -DNDEBUG
 opt: fastdna
 
 debug: CXXFLAGS += -g -O0 -fno-inline
 debug: fastdna
 
 common.o: src/common.cpp src/common.h
-	$(CXX) $(CXXFLAGS) -c -lz src/common.cpp
+	$(CXX) $(CXXFLAGS) -c src/common.cpp
 
 hash.o: src/hash.cpp src/hash.hpp
-	$(CXX) $(CXXFLAGS) -c -lz src/hash.cpp
+	$(CXX) $(CXXFLAGS) -c src/hash.cpp
 
 Kmer.o: src/Kmer.cpp src/hash.hpp src/Kmer.hpp
-	$(CXX) $(CXXFLAGS) -c -lz src/Kmer.cpp
+	$(CXX) $(CXXFLAGS) -c src/Kmer.cpp
 
 KmerIterator.o: src/KmerIterator.cpp src/KmerIterator.hpp src/Kmer.hpp
-	$(CXX) $(CXXFLAGS) -c -lz src/KmerIterator.cpp
+	$(CXX) $(CXXFLAGS) -c src/KmerIterator.cpp
 
 # KmerHashTable.o: src/KmerHashTable.cpp src/KmerHashTable.h src/Kmer.hpp
 # 	$(CXX) $(CXXFLAGS) -c src/KmerHashTable.cpp
 
 KmerIndex.o: src/KmerIndex.cpp src/*.hpp src/common.h src/KmerHashTable.h src/kseq.h
-	$(CXX) $(CXXFLAGS) -c -lz src/KmerIndex.cpp
+	$(CXX) $(CXXFLAGS) -c src/KmerIndex.cpp
 
 args.o: src/args.cc src/args.h
 	$(CXX) $(CXXFLAGS) -c src/args.cc
@@ -64,7 +64,7 @@ fasttext.o: src/fasttext.cc src/*.h src/*.hpp
 	$(CXX) $(CXXFLAGS) -c src/fasttext.cc
 
 fastdna: $(OBJS) src/fasttext.cc
-	$(CXX) $(CXXFLAGS) $(OBJS) src/main.cc -o fastdna
+	$(CXX) $(CXXFLAGS) -lz $(OBJS) src/main.cc -o fastdna
 
 clean:
 	rm -rf *.o fasttext
