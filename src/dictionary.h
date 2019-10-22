@@ -66,7 +66,7 @@ class Dictionary {
 
     explicit Dictionary(std::shared_ptr<Args>);
     explicit Dictionary(std::shared_ptr<Args>, std::istream&);
-    void addLabel(const std::string&);
+    void addLabel(const entry);
     index nwords(const int8_t k) const;
     index nwords() const;
     int32_t nlabels() const;
@@ -86,7 +86,7 @@ class Dictionary {
     void save(std::ostream&) const;
     void load(std::istream&);
     // void loadLabelMap();
-    std::vector<int64_t> getCounts() const;
+    std::vector<int64_t> getLabelCounts() const;
     int32_t getLine(std::istream&, std::vector<index>&, std::vector<int32_t>&)
         const;
     int32_t getLine(std::istream&, std::vector<index>&,

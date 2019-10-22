@@ -79,7 +79,7 @@ void Dictionary::add(entry e) {
   nsequences_++;
   // // Find label
   // e.label = findLabel(e.name);
-  addLabel(e.label);
+  addLabel(e);
   name2label_[e.name] = e.label;
   sequences_.push_back(e);
 }
@@ -99,15 +99,18 @@ int Dictionary::labelFromPos(const std::streampos& pos) {
   // std::cerr << "\rLabel: " << sequences_[i].label << std::endl;
   // std::cerr << "\rIndex: " << label2int_[sequences_[i].label] << std::endl;
   int32_t index = label2int_[sequences_[i].label];
-  counts_[index] += 1; 
+  // counts_[index] += 1; 
   return index;
 }
 
-void Dictionary::addLabel(const std::string& label) {
-  auto it = label2int_.find(label);
+void Dictionary::addLabel(const entry e) {
+  auto it = label2int_.find(e.label);
   if (it == label2int_.end()) {
-    label2int_[label] = nlabels_++;
-    counts_.push_back(0);
+    label2int_[e.label] = nlabels_++;
+    counts_.push_back(e.count);
+  } 
+  else {
+    counts_[label2int_[e.label]] += e.count;
   }
 }
 
@@ -487,14 +490,7 @@ void Dictionary::initTableDiscard() {
   // }
 }
 
-std::vector<int64_t> Dictionary::getCounts() const {
-  // for (auto& w : words_) {
-  //   if (w.type == type) counts.push_back(w.count);
-  // }
-  std::cerr << std::to_string(counts_.size()) << " labels" << std::endl;
-  for (int i = 0; i < counts_.size(); i++) {
-    std::cerr << std::to_string(i) << " " << std::to_string(counts_[i]) << std::endl;
-  }
+std::vector<int64_t> Dictionary::getLabelCounts() const {
   return counts_;
 }
 
@@ -672,12 +668,19 @@ void Dictionary::load(std::istream& in) {
     name2label_[name] = label;
   }
   label2int_.clear();
+  counts_.clear();
   for (int32_t i = 0; i < nlabels_; i++) {
     int32_t index;
     std::string label;
     loadString(in, label);
     in.read((char*) &index, sizeof(int32_t));
     label2int_[label] = index;
+    counts_.push_back(0);
+  }
+  // Recount labels
+  // Maybe better to save and load counts
+  for (auto it = sequences_.cbegin(); it != sequences_.cend(); ++it) {
+    addLabel(*it);
   }
   // initTableDiscard();
   // initNgrams();

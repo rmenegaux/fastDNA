@@ -250,12 +250,13 @@ void FastText::loadModel(std::istream& in) {
   model_ = std::make_shared<Model>(input_, output_, args_, 0);
   model_->quant_ = quant_;
   model_->setQuantizePointer(qinput_, qoutput_, args_->qout);
-
-  // if (args_->model == model_name::sup) {
-  //   model_->setTargetCounts(dict_->getCounts(entry_type::label));
-  // } else {
-  //   model_->setTargetCounts(dict_->getCounts(entry_type::word));
-  // }
+  
+  std::cerr << " set counts" << std::endl;
+  if (args_->model == model_name::sup) {
+    model_->setTargetCounts(dict_->getLabelCounts());
+  } else {
+    // model_->setTargetCounts(dict_->getCounts(entry_type::word));
+  }
 }
 
 void FastText::printInfo(real progress, real loss, std::ostream& log_stream) {
@@ -335,11 +336,11 @@ void FastText::quantize(const Args qargs) {
   model_ = std::make_shared<Model>(input_, output_, args_, 0);
   model_->quant_ = quant_;
   model_->setQuantizePointer(qinput_, qoutput_, args_->qout);
-  // if (args_->model == model_name::sup) {
-  //   model_->setTargetCounts(dict_->getCounts(entry_type::label));
-  // } else {
-  //   model_->setTargetCounts(dict_->getCounts(entry_type::word));
-  // }
+  if (args_->model == model_name::sup) {
+    model_->setTargetCounts(dict_->getLabelCounts());
+  } else {
+    // model_->setTargetCounts(dict_->getCounts(entry_type::word));
+  }
 }
 
 void FastText::supervised(
@@ -560,10 +561,16 @@ void FastText::trainThread(int32_t threadId) {
   const int64_t size_ = utils::size(ifs);
   std::streampos pos;
 
+  // std::cerr << "\r trainThread " << std::endl;
+
   std::mt19937_64 rng(threadId);
   std::uniform_int_distribution<int64_t> uniform(0, size_-1);
 
   Model model(input_, output_, args_, threadId);
+  if (args_->model == model_name::sup) {
+    model.setTargetCounts(dict_->getLabelCounts());
+  } else {
+  }
   // FIXME
   const int64_t ntokens = size_ / args_->length; // dict_->ntokens();
   int64_t localFragmentCount = 0;
@@ -586,6 +593,7 @@ void FastText::trainThread(int32_t threadId) {
         utils::seek(ifs, pos);
         if (dict_->readSequence(ifs, line, args_->length, rng)) {
           localFragmentCount += 1;
+          // std::cerr << "\r supervised " << std::endl;
           supervised(model, lr, line, labels);
         }
       }
@@ -670,7 +678,7 @@ void FastText::train(const Args args) {
       input_ = std::make_shared<Matrix>(dict_->nwords()+args_->bucket, args_->dim);
       input_->uniform(1.0 / args_->dim);
     }
-  
+
     if (args_->model == model_name::sup) {
       output_ = std::make_shared<Matrix>(dict_->nlabels(), args_->dim);
     } else {
@@ -678,13 +686,13 @@ void FastText::train(const Args args) {
     }
     output_->zero();
   }
-  startThreads();
   model_ = std::make_shared<Model>(input_, output_, args_, 0);
-  // if (args_->model == model_name::sup) {
-  //   model_->setTargetCounts(dict_->getCounts(entry_type::label));
-  // } else {
-  //   model_->setTargetCounts(dict_->getCounts(entry_type::word));
-  // }
+  if (args_->model == model_name::sup) {
+    model_->setTargetCounts(dict_->getLabelCounts());
+  } else {
+    // model_->setTargetCounts(dict_->getCounts(entry_type::word));
+  }
+  startThreads();
 }
 
 void FastText::startThreads() {
