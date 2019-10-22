@@ -22,19 +22,24 @@ fastdna=../fastdna
 
 threads=4 # number of threads for training
 d=10 # embedding dimension
-k=10 # k-mer length
-K=13 # long k-mer length
+k=1 # k-mer length
+K=31 # long k-mer length
 e=1 # number of epochs
 L=100 # training read length,
 
 model_name="fdna_k${k}_d${d}_e${e}"
 model_path="$output_path/$model_name"
-index="$dataset_path/kallisto_index_$db_$K"
-index="$output_path/kallisto_index_$db"
+index="$dataset_path/bifrost_graph_$db_$K"
+index="$output_path/bifrost_graph_$db_$K"
+
+# Build the compacted De Bruijn graph
+echo "Building the De Bruijn graph $index"
+# bifrost build -t 4 -k $K -o $index -r $train_dataset
 
 # Train a supervised model
-$fastdna supervised -input $train_dataset -labels $train_labels -output $model_path -minn $k -dim $d -epoch $e -thread $threads -loadIndex $index
+echo "Training model $model_name"
+# $fastdna supervised -input $train_dataset -labels $train_labels -output $model_path -minn $k -dim $d -epoch $e -thread $threads -loadIndex ${index}.gfa
 
 # Test the model
 echo "Testing model $model_name"
-$fastdna test $model_path.bin $test_dataset $test_labels $index
+$fastdna test $model_path.bin $test_dataset $test_labels ${index}.gfa

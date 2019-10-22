@@ -20,7 +20,7 @@
 
 #include "args.h"
 #include "real.h"
-#include "KmerIndex.h"
+#include "CompactedDBG.hpp"
 
 namespace fasttext {
 
@@ -59,7 +59,7 @@ class Dictionary {
     int32_t nlabels_;
     int32_t nsequences_;
     int64_t pruneidx_size_;
-    KmerIndex kmer_index_;
+    std::shared_ptr<CompactedDBG<>> dbg_;
     std::vector<int64_t> counts_;
     std::unordered_map<int32_t, int32_t> pruneidx_;
 

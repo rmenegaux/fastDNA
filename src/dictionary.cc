@@ -9,7 +9,8 @@
 
 #include "dictionary.h"
 #include "Kmer.hpp"
-#include "KmerIndex.h"
+#include "CompactedDBG.hpp"
+#include "UnitigMap.hpp"
 
 #include <assert.h>
 
@@ -37,16 +38,10 @@ Dictionary::Dictionary(std::shared_ptr<Args> args, std::istream& in) : args_(arg
   load(in);
 }
 
-// Load kallisto index
+// Load bifrost index
 void Dictionary::loadIndex(const std::string& filename) {
-  kmer_index_.load(filename);
-  // std::cerr << "[index] size of index object " << sizeof(kmer_index_) << std::endl;
-  std::vector<Contig>().swap(kmer_index_.dbGraph.contigs);
-  // kmer_index_.ecmap.clear();
-  // kmer_index_.ecmapinv.clear();
-  // kmer_index_.target_seqs_.clear();
-  //std::cerr << "[index] size of stripped index " << sizeof(kmer_index_) << std::endl;
-  //std::cerr << "[index] size of kmer table " << sizeof(kmer_index_.kmap) << std::endl;
+  dbg_ = std::make_shared<CompactedDBG<>>();
+  dbg_->read(filename);
 }
 
 /*
@@ -141,7 +136,7 @@ index Dictionary::nwords() const {
 
 // CHANGE
 index Dictionary::nlong() const {
-  return kmer_index_.dbGraph.ecs.size();
+  return dbg_->size() / 0.7;
 }
 
 int32_t Dictionary::nlabels() const {
@@ -231,7 +226,7 @@ bool Dictionary::readSequence(std::istream& in,
   int c;
   int8_t val, val_reverse;
 
-  const int K = kmer_index_.k;
+  const int K = dbg_->getK();
   std::string kmer_str;
   kmer_str.reserve(K);
   Kmer kmer;
@@ -288,7 +283,7 @@ bool Dictionary::readSequence(std::istream& in,
       if (i < K) {
         kmer_str.push_back(c);
         if (i == K-1) {
-          kmer.set_kmer(kmer_str.c_str());
+          kmer = Kmer(kmer_str.c_str());
         }
       } else {
         kmer = kmer.forwardBase(c);
@@ -363,16 +358,20 @@ bool Dictionary::readSequence(std::string& word,
 
 // build kmeriterator
 bool Dictionary::pushKmer(std::vector<index>& ngrams,
-                          const Kmer& kmer) const {
+                          const Kmer& kmer_query) const {
   // Searches for kmer in the kallisto index and pushes
   // its (contig) index to ngrams
-  auto search = kmer_index_.kmap.find(kmer.rep());
-  bool found = (search != kmer_index_.kmap.end());
-  if (found) {
-    KmerEntry entry = search->second;
-    ngrams.push_back(nwords() + entry.contig);
+  UnitigMap<> um = dbg_->find(kmer_query); // Chercher un kmer "kmer_query"
+  if (um.isEmpty) {
+    return false;
   }
-  return found;
+  else {
+    index contig;
+    Kmer km_repr = um.getUnitigHead().rep(); // Obtient le premier kmer de l'unitig dans lequel  "kmer_query" apparait, Ce kmer "représente" l'unitig.
+    contig = km_repr.hash() % nlong(); // Hasher le kmer représentant l'unitig
+    ngrams.push_back(contig);
+    return true;
+  }
 }
 
 std::string Dictionary::getSequence(index ind) const {

@@ -10,14 +10,8 @@
 #include <iostream>
 #include <queue>
 #include <iomanip>
-// needed for kallisto
-#include <getopt.h>
-#include <sstream>
-#include <sys/stat.h>
-
 #include "fasttext.h"
 #include "args.h"
-#include "common.h"
 
 using namespace fasttext;
 
@@ -53,7 +47,6 @@ void printTestUsage() {
     << "  <model>      model filename\n"
     << "  <test-data>  test data filename (if -, read from stdin)\n"
     << "  <model>      test labels filename\n"
-    << "  <index>      kallisto index\n"
     << "  <k>          (optional; 1 by default) predict top k labels\n"
     << "  <th>         (optional; 0.0 by default) probability threshold\n"
     << std::endl;
@@ -64,7 +57,6 @@ void printPredictUsage() {
     << "usage: fastdna predict[-prob] <model> <test-data> [<k>] [<th>]\n\n"
     << "  <model>      model filename\n"
     << "  <test-data>  test data filename (if -, read from stdin)\n"
-    << "  <index>      kallisto index\n"
     << "  <k>          (optional; 1 by default) predict top k labels\n"
     << "  <th>         (optional; 0.0 by default) probability threshold\n"
     << std::endl;
@@ -132,18 +124,6 @@ void printDumpUsage() {
     << std::endl;
 }
 
-void printIndexUsage() {
-  std::cout
-    << "Builds a kallisto index\n\n"
-    << "Usage: fastdna index [arguments] FASTA-files\n"
-    << "Required argument:\n"
-    << "-i, --index=STRING          Filename for the kallisto index to be constructed\n\n"
-    << "Optional argument:\n"
-    << "-k, --kmer-size=INT         k-mer (odd) length (default: 31, max value: " << (Kmer::MAX_K-1) << ")\n"
-    << "    --make-unique           Replace repeated target names with unique names\n"
-    << std::endl;
-}
-
 void test(const std::vector<std::string>& args) {
   if (args.size() < 6 || args.size() > 8) {
     printTestUsage();
@@ -191,23 +171,22 @@ void test(const std::vector<std::string>& args) {
 }
 
 void predict(const std::vector<std::string>& args) {
-  if (args.size() < 5 || args.size() > 7) {
+  if (args.size() < 4 || args.size() > 6) {
     printPredictUsage();
     exit(EXIT_FAILURE);
   }
   int32_t k = 1;
   real threshold = 0.0;
-  if (args.size() > 5) {
-    k = std::stoi(args[5]);
-    if (args.size() == 7) {
-      threshold = std::stof(args[6]);
+  if (args.size() > 4) {
+    k = std::stoi(args[4]);
+    if (args.size() == 6) {
+      threshold = std::stof(args[5]);
     }
   }
 
   bool print_prob = args[1] == "predict-prob";
   FastText fasttext;
   fasttext.loadModel(std::string(args[2]));
-  fasttext.loadIndex(args[4]);
 
   std::string infile(args[3]);
   if (infile == "-") {
@@ -373,111 +352,6 @@ void dump(const std::vector<std::string>& args) {
   }
 }
 
-bool CheckOptionsIndex(ProgramOptions& opt) {
-
-  bool ret = true;
-
-  if (opt.k <= 1 || opt.k >= Kmer::MAX_K) {
-    std::cerr << "Error: invalid k-mer length " << opt.k << ", minimum is 3 and  maximum is " << (Kmer::MAX_K -1) << std::endl;
-    ret = false;
-  }
-
-  if (opt.k % 2 == 0) {
-    std::cerr << "Error: k needs to be an odd number" << std::endl;
-    ret = false;
-  }
-
-  if (opt.transfasta.empty()) {
-    std::cerr << "Error: no FASTA files specified" << std::endl;
-    ret = false;
-  } else {
-
-    for (auto& fasta : opt.transfasta) {
-      // we want to generate the index, check k, index and transfasta
-      struct stat stFileInfo;
-      auto intStat = stat(fasta.c_str(), &stFileInfo);
-      if (intStat != 0) {
-        std::cerr << "Error: FASTA file not found " << fasta << std::endl;
-        ret = false;
-      }
-    }
-  }
-
-  if (opt.index.empty()) {
-    std::cerr << "Error: need to specify kallisto index name" << std::endl;
-    ret = false;
-  }
-
-  return ret;
-}
-
-void ParseOptionsIndex(int argc, char **argv, ProgramOptions& opt) {
-  int verbose_flag = 0;
-  int make_unique_flag = 0;
-  const char *opt_string = "i:k:";
-  static struct option long_options[] = {
-    // long args
-    {"verbose", no_argument, &verbose_flag, 1},
-    {"make-unique", no_argument, &make_unique_flag, 1},
-    // short args
-    {"index", required_argument, 0, 'i'},
-    {"kmer-size", required_argument, 0, 'k'},
-    {0,0,0,0}
-  };
-  int c;
-  int option_index = 0;
-  while (true) {
-    c = getopt_long(argc,argv,opt_string, long_options, &option_index);
-
-    if (c == -1) {
-      break;
-    }
-
-    switch (c) {
-    case 0:
-      break;
-    case 'i': {
-      opt.index = optarg;
-      break;
-    }
-    case 'k': {
-      std::stringstream(optarg) >> opt.k;
-      break;
-    }
-    default: break;
-    }
-  }
-
-  if (verbose_flag) {
-    opt.verbose = true;
-  }
-  if (make_unique_flag) {
-    opt.make_unique = true;
-  }
-
-  for (int i = optind; i < argc; i++) {
-    opt.transfasta.push_back(argv[i]);
-  }
-}
-
-void makeIndex(int argc, char **argv) {
-  ProgramOptions opt;
-  if (argc==2) {
-    printIndexUsage();
-  }
-  ParseOptionsIndex(argc-1,argv+1,opt);
-  if (!CheckOptionsIndex(opt)) {
-    printIndexUsage();
-    exit(EXIT_FAILURE);
-  } else {
-    // create an index
-    Kmer::set_k(opt.k);
-    KmerIndex index(opt);
-    index.BuildTranscripts(opt);
-    index.write(opt.index);
-  }
-}
-
 int main(int argc, char** argv) {
   std::vector<std::string> args(argv, argv + argc);
   if (args.size() < 2) {
@@ -505,8 +379,6 @@ int main(int argc, char** argv) {
     predict(args);
   } else if (command == "dump") {
     dump(args);
-  } else if (command == "index") {
-    makeIndex(argc, argv);
   } else {
     printUsage();
     exit(EXIT_FAILURE);
