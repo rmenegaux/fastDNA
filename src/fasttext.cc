@@ -251,7 +251,7 @@ void FastText::loadModel(std::istream& in) {
   model_->quant_ = quant_;
   model_->setQuantizePointer(qinput_, qoutput_, args_->qout);
   
-  std::cerr << " set counts" << std::endl;
+ // std::cerr << " set counts" << std::endl;
   if (args_->model == model_name::sup) {
     model_->setTargetCounts(dict_->getLabelCounts());
   } else {
