@@ -6,6 +6,7 @@
 * [Command line interface](#command-line-interface)
    * [Full documentation](#full-documentation)
 * [Python](#python)
+* [Data](#data)
 * [References](#references)
    * [Continuous Embedding of DNA reads and application to metagenomics](#continuous-embedding-of-dna-reads-and-application-to-metagenomics)
    * [Enriching Word Vectors with Subword Information](#enriching-word-vectors-with-subword-information)
@@ -151,6 +152,10 @@ Defaults may vary by mode. (Word-representation modes `skipgram` and `cbow` use 
 ## Python
 
 The python scripts require `numpy` and `scikit-learn` for evaluating predictions.
+
+## Data
+
+The *small* and *large* datasets used in the paper can be found [here](http://projects.cbio.mines-paristech.fr/largescalemetagenomics/)
 
 ## References
 
