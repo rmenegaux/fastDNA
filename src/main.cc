@@ -214,7 +214,7 @@ void printWordVectors(const std::vector<std::string> args) {
   Vector vec(fasttext.getDimension());
   int i = 0;
   while (!std::cin.eof()) {
-    std::cerr << "\rRead sequence n" << i << std::flush;
+    // std::cerr << "\rRead sequence n" << i << std::flush;
     fasttext.getWordVector(vec, std::cin);
     std::cout << vec << std::endl;
     i++;

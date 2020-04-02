@@ -6,6 +6,7 @@
 * [Command line interface](#command-line-interface)
    * [Full documentation](#full-documentation)
 * [Python](#python)
+* [Data](#data)
 * [References](#references)
    * [Continuous Embedding of DNA reads and application to metagenomics](#continuous-embedding-of-dna-reads-and-application-to-metagenomics)
    * [Enriching Word Vectors with Subword Information](#enriching-word-vectors-with-subword-information)
@@ -87,11 +88,11 @@ The argument `n` is optional, and equal to `1` by default.
 If you want to compute vector representations of DNA sequences, please use:
 
 ```
-$ ./fastdna print-sentence-vectors model.bin < text.fasta
+$ ./fastdna print-word-vectors model.bin < text.fasta
 ```
 
 This assumes that the `text.fasta` file contains the DNA sequences that you want to get vectors for.
-The program will output one vector representation per line in the file.
+The program will output one vector representation per sequence in the file.
 
 You can also quantize a supervised model to reduce its memory usage with the following command:
 
@@ -146,11 +147,68 @@ The following arguments for quantization are optional:
   -dsub               size of each sub-vector [2]
 ```
 
-Defaults may vary by mode. (Word-representation modes `skipgram` and `cbow` use a default `-minCount` of 5.)
-
 ## Python
 
+Most use cases are covered in the python script `fdna.py`.
+
+To reproduce the results from the paper, download the [data](#data) then run:
+```
+python fdna.py -train -train_fasta /path/to/train_large_fasta -train_labels /path/to/train_large_labels \
+    -eval -test_fasta /path/to/test_large_fasta -test_labels /path/to/test_large_labels \
+    -k 13 -d 100 -noise 4 -e 200
+```
+
+Full usage:
+```
+python fdna.py --help
+usage: fdna.py [-h] [-train] [-quantize] [-predict] [-eval] [-predict_quant]
+               [-train_fasta TRAIN_FASTA] [-train_labels TRAIN_LABELS]
+               [-test_fasta TEST_FASTA] [-test_labels TEST_LABELS]
+               [-output_dir OUTPUT_DIR] [-model_name MODEL_NAME]
+               [-threads THREADS] [-d D] [-k K] [-e E] [-lr LR] [-noise NOISE]
+               [-L L] [-freeze] [-pretrained_vectors PRETRAINED_VECTORS]
+               [-verbose VERBOSE]
+
+train, predict and/or quantize fdna model
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -train                train model
+  -quantize             quantize model
+  -predict              make predictions
+  -eval                 make and evaluate predictions
+  -predict_quant        make and evaluate predictions with quantized model
+  -train_fasta TRAIN_FASTA
+                        training dataset, fasta file containing full genomes
+  -train_labels TRAIN_LABELS
+                        training labels, text file containing as many labels
+                        as there are training genomes
+  -test_fasta TEST_FASTA
+                        testing dataset, fasta file containing reads
+  -test_labels TEST_LABELS
+                        testing dataset, text file containing as many labels
+                        as there are reads
+  -output_dir OUTPUT_DIR
+                        output directory
+  -model_name MODEL_NAME
+                        optional user-defined model name
+  -threads THREADS      number of threads
+  -d D                  embedding dimension
+  -k K                  k-mer length
+  -e E                  number of training epochs
+  -lr LR                learning rate
+  -noise NOISE          level of training noise, percent of random mutations
+  -L L                  training read length
+  -freeze               freeze the embeddings
+  -pretrained_vectors PRETRAINED_VECTORS
+                        pretrained vectors .vec files
+  -verbose VERBOSE      output verbosity, 0 1 or 2
+```
 The python scripts require `numpy` and `scikit-learn` for evaluating predictions.
+
+## Data
+
+The data used in the paper is available here: [http://projects.cbio.mines-paristech.fr/largescalemetagenomics/](http://projects.cbio.mines-paristech.fr/largescalemetagenomics/).
 
 ## References
 

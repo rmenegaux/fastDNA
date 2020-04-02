@@ -1,40 +1,39 @@
 import argparse
-import os
+import os, sys
+sys.path.append(os.path.join(os.path.dirname(__file__), "python", "fastDNA"))
 
 from fastDNA import FastDNA
 from utils import make_model_name
 
 
-parser = argparse.ArgumentParser(description="train/predict/quantize fdna model")
+parser = argparse.ArgumentParser(description="train, predict and/or quantize fdna model")
 
-parser.add_argument("-output_dir", help="output directory",
-                    type=str, default="output/")
 # Type of action
 parser.add_argument("-train", help="train model",
                     action="store_true")
 parser.add_argument("-quantize", help="quantize model",
                     action="store_true")
-parser.add_argument("-predict", help="make and evaluate predictions",
+parser.add_argument("-predict", help="make predictions",
                     action="store_true")
 parser.add_argument("-eval", help="make and evaluate predictions",
                     action="store_true")
 parser.add_argument("-predict_quant",
                     help="make and evaluate predictions with quantized model",
                     action="store_true")
-parser.add_argument("-verbose",
-                    help="output verbosity, 0 1 or 2",
-                    type=int, default=1)
 # Dataset
-parser.add_argument("-train_dataset", help="training dataset, fasta file containing full genomes",
+parser.add_argument("-train_fasta", help="training dataset, fasta file containing full genomes",
                     type=str, default="example_data/train.fasta")
 parser.add_argument("-train_labels", help="training labels, text file containing as many labels as there are training genomes",
-                    type=str, default="example_data/train.labels")
-parser.add_argument("-test_dataset", help="testing dataset, fasta file containing fragments",
-                    type=str, default="example_data/test.fasta")
-parser.add_argument("-test_labels", help="testing dataset, fasta file containing fragments",
-                    type=str, default="example_data/test.labels")
+                    type=str)
+parser.add_argument("-test_fasta", help="testing dataset, fasta file containing reads",
+                    type=str)
+parser.add_argument("-test_labels", help="testing dataset, text file containing as many labels as there are reads",
+                    type=str)
+# Output directory
+parser.add_argument("-output_dir", help="output directory",
+                    type=str, default="output/")
 # Model parameters
-parser.add_argument("-model_name", help="imposed model name",
+parser.add_argument("-model_name", help="optional user-defined model name",
                     type=str)
 parser.add_argument("-threads", help="number of threads",
                     type=int, default=4)
@@ -46,7 +45,7 @@ parser.add_argument("-e", help="number of training epochs",
                     type=int, default=1)
 parser.add_argument("-lr", help="learning rate",
                     type=float, default=0.1)
-parser.add_argument("-noise", help="level of training noise",
+parser.add_argument("-noise", help="level of training noise, percent of random mutations",
                     type=float, default=0)
 parser.add_argument("-L", help="training read length",
                     type=int, default=200)
@@ -55,8 +54,30 @@ parser.add_argument("-freeze", help="freeze the embeddings",
 # Additional files
 parser.add_argument("-pretrained_vectors", help="pretrained vectors .vec files",
                     type=str)
+parser.add_argument("-verbose",
+                    help="output verbosity, 0 1 or 2",
+                    type=int, default=1)
 
 args = parser.parse_args()
+
+# ----------------
+# Check arguments
+# ----------------
+actions = ['train', 'eval', 'predict', 'predict_quant', 'quantize']
+
+if not any([getattr(args, a) for a in actions]):
+    parser.error('At least one of these arguments is required: {}'.format(actions))
+
+def check_required_args(arg_name, required_args):
+    if arg_name in vars(args):
+        for a in required_args:
+            if a not in vars(args):
+                parser.error('Argument `-{}` requires argument `-{}`, none was provided'.format(arg_name, a))
+
+check_required_args('train', ['train_fasta', 'train_labels'])
+check_required_args('eval', ['test_labels'])
+for a in ['eval', 'predict', 'predict_quant']:
+    check_required_args(a, ['test_fasta'])
 
 # -----------------
 # General file Paths
@@ -84,6 +105,7 @@ def mkdir(directory):
         os.makedirs(directory)
     return directory
 
+mkdir(args.output_dir)
 model_dir = mkdir(os.path.join(args.output_dir, 'models'))
 pred_dir = mkdir(os.path.join(args.output_dir, 'predictions'))
 
@@ -127,5 +149,9 @@ if args.quantize:
     ft.quantize(model_path, args.train_dataset)
 
 if args.predict_quant:
-    pass
+    ft.make_predictions(
+        '{}.ftz'.format(model_path),
+        args.test_dataset,
+        pred_path,
+    )
 

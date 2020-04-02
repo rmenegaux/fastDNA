@@ -78,41 +78,14 @@ class FastDNA():
         return timed_check_call(command, name=readout, verbose=self.verbose)
 
 
-    def evaluate_predictions(self, pred_labels, true_labels):
-        ''' 
-        Computes average species-level precision and recall
-        '''
-        from sklearn.metrics import accuracy_score
-        import numpy as np
-
-        y_true = np.genfromtxt(true_labels, dtype=str)
-
-        with open(pred_labels) as f:
-            y_pred = f.readlines()
-        y_pred = np.array([x.strip() for x in y_pred])
-
-        rec_per_species = {k: accuracy_score(y_pred[y_true==k],
-                                             y_true[y_true==k])
-                           for k in np.unique(y_true)}
-        rec = np.mean(rec_per_species.values())
-        acc_per_species = {k: accuracy_score(y_pred[y_pred==k],
-                                             y_true[y_pred==k])
-                           for k in np.unique(y_true) if (y_pred==k).any()}
-        prec = np.mean(acc_per_species.values())
-
-        if self.verbose > 0:
-            print('''Recall: {:.2%}  Precision: {:.2%}'''.format(rec, prec))
-            print('''Number of predicted species {}'''.format(len(np.unique(y_pred))))
-
-        return {'Recall': rec, 'Precision': prec}
-
-
     def predict_eval(self, model_path, input_data, input_labels, output_path):
         '''
         Make predictions and evaluate them
         '''
+        from evaluate import evaluate_predictions
+
         time = self.make_predictions(model_path, input_data, output_path)
-        results = self.evaluate_predictions(output_path, input_labels)
+        results = evaluate_predictions(output_path, input_labels, verbose=self.verbose)
         results['Time'] = time
         return results
 
