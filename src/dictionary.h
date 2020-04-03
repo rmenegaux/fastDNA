@@ -114,6 +114,7 @@ class Dictionary {
     bool readSequence(
         std::istream& in, std::vector<index>& ngrams,
         const int length,
+        bool add_noise,
         std::mt19937_64&) const;
     bool readSequence(std::string& word,
                       std::vector<index>& ngrams) const;

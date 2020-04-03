@@ -201,6 +201,7 @@ index Dictionary::computeIndex(index kmer,
 bool Dictionary::readSequence(std::istream& in,
                               std::vector<index>& ngrams,
                               const int length,
+                              bool add_noise,
                               std::mt19937_64& rng) const {
   // If length is -1, read all sequence
 
@@ -233,28 +234,25 @@ bool Dictionary::readSequence(std::istream& in,
     }
     switch(c) {
       case 'A' :
-      case 'a' : { val = 0, val_reverse = 3; break;}
+      case 'a' : { val = 0; break;}
       case 'C' :
-      case 'c' : { val = 1, val_reverse = 2; break;}
+      case 'c' : { val = 1; break;}
       case 'g' :
-      case 'G' : { val = 2, val_reverse = 1; break;}
+      case 'G' : { val = 2; break;}
       case 't' :
-      case 'T' : { val = 3, val_reverse = 0; break;}
-
+      case 'T' : { val = 3; break;}
       default : val = -1;
     }
     if (val >= 0) {
-      noise = uniform(rng);
-      // random mutation
-      if (noise <= args_->noise) {
-        val = noise % 4;
-        switch(val) {
-          case 0: {val_reverse = 3; break;}
-          case 1: {val_reverse = 2; break;}
-          case 2: {val_reverse = 1; break;}
-          case 3: {val_reverse = 0; break;}
+      if (add_noise) {
+        noise = uniform(rng);
+        // random mutation
+        if (noise <= args_->noise) {
+          val = noise % 4;
         }
       }
+      val_reverse = 3 - val;
+
       index *=  4;
       index += val;
       if (i < k) {
@@ -280,62 +278,8 @@ bool Dictionary::readSequence(std::istream& in,
                               std::vector<index>& ngrams,
                               const int length) const {
   // If length is -1, read all sequence
-
-  const int k = args_->minn;
-  // mask to keep the index values between 0 and 4**k-1
-  index mask = (1 << 2*k) - 1;
-  index index = 0, index_reverse = 0;
-  int c;
-  int8_t val, val_reverse;
-
-  ngrams.clear();
-
-  std::streambuf& sb = *in.rdbuf();
-
-  int i = 0;
-  while (length == -1 || i < length) {
-    if (i >= k) {
-      ngrams.push_back(computeIndex(index, index_reverse, k));
-    }
-    c = sb.sbumpc();
-    if (c == BOS || c == EOF) {
-      // Reached end of sequence
-      if (c == BOS) {
-        sb.sungetc();
-      }
-      return (i >= k);
-    }
-    switch(c) {
-      case 'A' :
-      case 'a' : { val = 0, val_reverse = 3; break;}
-      case 'C' :
-      case 'c' : { val = 1, val_reverse = 2; break;}
-      case 'g' :
-      case 'G' : { val = 2, val_reverse = 1; break;}
-      case 't' :
-      case 'T' : { val = 3, val_reverse = 0; break;}
-      default : val = -1;
-    }
-    if (val >= 0) {
-      index *=  4;
-      index += val;
-      if (i < k) {
-        index_reverse += val_reverse << 2*i;
-      }
-      else {
-        index_reverse /= 4;
-        index_reverse += val_reverse << 2*(k-1);
-        index &= mask;
-        index_reverse &= mask;
-      }
-      i++;
-    }
-  }
-  if (i >= k) {
-    ngrams.push_back(computeIndex(index, index_reverse, k));
-    return true;
-  }
-  return false;
+  std::mt19937_64 dummy(0);
+  return readSequence(in, ngrams, length, false, dummy);
 }
 
 bool Dictionary::readSequence(std::string& word,
