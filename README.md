@@ -93,6 +93,10 @@ $ ./fastdna print-word-vectors model.bin < text.fasta
 
 This assumes that the `text.fasta` file contains the DNA sequences that you want to get vectors for.
 The program will output one vector representation per sequence in the file.
+To write the vectors to a file, redirect the output as so:
+```
+$ ./fastdna print-word-vectors model.bin < text.fasta > vectors.txt
+```
 
 You can also quantize a supervised model to reduce its memory usage with the following command:
 

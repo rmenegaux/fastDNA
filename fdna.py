@@ -20,14 +20,14 @@ parser.add_argument("-eval", help="make and evaluate predictions",
 parser.add_argument("-predict_quant",
                     help="make and evaluate predictions with quantized model",
                     action="store_true")
-# Dataset
+# Datasets
 parser.add_argument("-train_fasta", help="training dataset, fasta file containing full genomes",
                     type=str, default="example_data/train.fasta")
 parser.add_argument("-train_labels", help="training labels, text file containing as many labels as there are training genomes",
                     type=str)
 parser.add_argument("-test_fasta", help="testing dataset, fasta file containing reads",
                     type=str)
-parser.add_argument("-test_labels", help="testing dataset, text file containing as many labels as there are reads",
+parser.add_argument("-test_labels", help="testing labels, text file containing as many labels as there are reads",
                     type=str)
 # Output directory
 parser.add_argument("-output_dir", help="output directory",
@@ -118,7 +118,7 @@ pretrained_vectors = args.pretrained_vectors if args.pretrained_vectors else ""
 
 if args.train:
     ft.train(
-        model_path, args.train_dataset, args.train_labels,
+        model_path, args.train_fasta, args.train_labels,
         dim=args.d,
         k=args.k,
         length=args.L,
@@ -133,7 +133,7 @@ if args.train:
 if args.eval:
     results = ft.predict_eval(
         '{}.bin'.format(model_path),
-        args.test_dataset,
+        args.test_fasta,
         args.test_labels,
         pred_path,
     )
@@ -141,17 +141,17 @@ if args.eval:
 elif args.predict:
     ft.make_predictions(
         '{}.bin'.format(model_path),
-        args.test_dataset,
+        args.test_fasta,
         pred_path,
     )
 
 if args.quantize:
-    ft.quantize(model_path, args.train_dataset)
+    ft.quantize(model_path, args.train_fasta)
 
 if args.predict_quant:
     ft.make_predictions(
         '{}.ftz'.format(model_path),
-        args.test_dataset,
+        args.test_fasta,
         pred_path,
     )
 
