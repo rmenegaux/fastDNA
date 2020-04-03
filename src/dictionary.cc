@@ -305,7 +305,6 @@ bool Dictionary::readSequence(std::istream& in,
       }
       return (i >= k);
     }
-    // c = toupper(c);
     switch(c) {
       case 'A' :
       case 'a' : { val = 0, val_reverse = 3; break;}
@@ -346,9 +345,8 @@ bool Dictionary::readSequence(std::string& word,
 }
 
 std::string Dictionary::getSequence(index ind) const {
-  //  Returns the first k-mer in lexicographical order from the pair of possible k-mers
+  // Returns the first k-mer in lexicographical order from the pair of possible k-mers
   std::string seq;
-  // std::cerr << "dude" << std::endl;
   getSequenceRCI(seq, ind, args_->minn);
   // std::cerr << ind << ": " << seq << std::endl;
   return seq; // getSequenceRCI(ind, args_->minn);
@@ -549,8 +547,6 @@ int32_t Dictionary::getLine(std::istream& in,
 int32_t Dictionary::getLine(std::istream& fasta,
                             std::vector<index>& ngrams) const {
   std::string header;
-
-  // std::streampos begin = fasta.tellg();
 
   if (fasta.peek() == BOS) {
     std::getline(fasta, header);

@@ -60,9 +60,6 @@ class FastText {
 
   index getWordId(std::string&) const;
   int32_t getSubwordId(const std::string&) const;
-  FASTTEXT_DEPRECATED(
-    "getVector is being deprecated and replaced by getWordVector.")
-  void getVector(Vector&, std::string&) const;
   void getWordVector(Vector&, std::string&) const;
   void getWordVector(Vector& vec, std::istream& in) const;
   void getWordVector(Vector& vec, const index i) const;

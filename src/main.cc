@@ -27,7 +27,6 @@ void printUsage() {
     // << "  skipgram                train a skipgram model\n"
     // << "  cbow                    train a cbow model\n"
     << "  print-word-vectors      print word vectors given a trained model\n"
-    << "  print-sentence-vectors  print sentence vectors given a trained model\n"
     // << "  print-ngrams            print ngrams given a trained model and word\n"
     // << "  nn                      query for nearest neighbors\n"
     // << "  analogies               query for analogies\n"
@@ -65,13 +64,6 @@ void printPredictUsage() {
 void printPrintWordVectorsUsage() {
   std::cerr
     << "usage: fastdna print-word-vectors <model>\n\n"
-    << "  <model>      model filename\n"
-    << std::endl;
-}
-
-void printPrintSentenceVectorsUsage() {
-  std::cerr
-    << "usage: fastdna print-sentence-vectors <model>\n\n"
     << "  <model>      model filename\n"
     << std::endl;
 }
@@ -212,31 +204,12 @@ void printWordVectors(const std::vector<std::string> args) {
   fasttext.loadModel(std::string(args[2]));
   std::string word;
   Vector vec(fasttext.getDimension());
-  int i = 0;
-  while (!std::cin.eof()) {
-    // std::cerr << "\rRead sequence n" << i << std::flush;
+  while (1) {
     fasttext.getWordVector(vec, std::cin);
+    if (std::cin.eof()) { break; }
     std::cout << vec << std::endl;
-    i++;
-    // std::cout << word << " " << vec << std::endl;
   }
   exit(0);
-}
-
-void printSentenceVectors(const std::vector<std::string> args) {
-  // if (args.size() != 3) {
-  //   printPrintSentenceVectorsUsage();
-  //   exit(EXIT_FAILURE);
-  // }
-  // FastText fasttext;
-  // fasttext.loadModel(std::string(args[2]));
-  // Vector svec(fasttext.getDimension());
-  // while (std::cin.peek() != EOF) {
-  //   fasttext.getSentenceVector(std::cin, svec);
-  //   // Don't print sentence
-  //   std::cout << svec << std::endl;
-  // }
-  // exit(0);
 }
 
 void printNgrams(const std::vector<std::string> args) {
@@ -366,8 +339,6 @@ int main(int argc, char** argv) {
     quantize(args);
   } else if (command == "print-word-vectors") {
     printWordVectors(args);
-  } else if (command == "print-sentence-vectors") {
-    printSentenceVectors(args);
   } else if (command == "print-ngrams") {
     printNgrams(args);
   } else if (command == "nn") {
