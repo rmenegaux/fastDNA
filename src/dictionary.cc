@@ -500,18 +500,10 @@ int32_t Dictionary::getLine(std::istream& fasta,
   return 0;
 }
 
-int32_t Dictionary::getLine(std::istream& fasta,
-                            std::istream& labelfile,
-                            std::vector<index>& ngrams,
-                            std::vector<int32_t>& labels) const {
-  std::string label, header;
-
-  if (fasta.peek() == BOS) {
-    std::getline(fasta, header);
-  }
-  ngrams.clear();
+int32_t Dictionary::getLabels(std::istream& labelfile,
+                              std::vector<int32_t>& labels) const {
+  std::string label;
   labels.clear();
-  readSequence(fasta, ngrams, -1);
   std::getline(labelfile, label);
   auto it = label2int_.find(label);
   if (it != label2int_.end()) {

@@ -386,10 +386,46 @@ std::tuple<int64_t, double, double> FastText::test(
   std::vector<int32_t> labels;
   // dict_->printDictionary();
   while (in.peek() != EOF) {
-    dict_->getLine(in, labelfile, line, labels);
+    dict_->getLine(in, line);
+    dict_->getLabels(labelfile, labels);
     if (labels.size() > 0 && line.size() > 0) {
       std::vector<std::pair<real, int32_t>> modelPredictions;
       model_->predict(line, k, threshold, modelPredictions);
+      for (auto it = modelPredictions.cbegin(); it != modelPredictions.cend(); it++) {
+        if (std::find(labels.begin(), labels.end(), it->second) != labels.end()) {
+          precision += 1.0;
+        }
+      }
+      nexamples++;
+      nlabels += labels.size();
+      npredictions += modelPredictions.size();
+    }
+    // else {
+    //   // std::cerr << "line " << line.size() << " label " << " pos " << in.tellg() / 215 << std::endl;
+    // }
+  }
+  return std::tuple<int64_t, double, double>(
+      nexamples, precision / npredictions, precision / nlabels);
+}
+
+std::tuple<int64_t, double, double> FastText::test_paired(
+    std::istream& in,
+    std::istream& labelfile,
+    int32_t k,
+    real threshold) {
+  int32_t nexamples = 0, nlabels = 0, npredictions = 0;
+  double precision = 0.0;
+  std::vector<index> line;
+  std::vector<index> line2;
+  std::vector<int32_t> labels;
+  // dict_->printDictionary();
+  while (in.peek() != EOF) {
+    dict_->getLine(in, line);
+    dict_->getLine(in, line2);
+    dict_->getLabels(labelfile, labels);
+    if (labels.size() > 0 && (line.size() > 0 || line2.size() > 0)) {
+      std::vector<std::pair<real, int32_t>> modelPredictions;
+      model_->predict_paired(line, line2, k, threshold, modelPredictions);
       for (auto it = modelPredictions.cbegin(); it != modelPredictions.cend(); it++) {
         if (std::find(labels.begin(), labels.end(), it->second) != labels.end()) {
           precision += 1.0;
@@ -427,16 +463,58 @@ void FastText::predict(
   }
 }
 
+void FastText::predict_paired(
+  std::istream& in,
+  int32_t k,
+  std::vector<std::pair<real,std::string>>& predictions,
+  real threshold
+) const {
+  std::vector<index> words;
+  std::vector<index> words2;
+  // FIXME, guesses that the sequence length is same as training
+  words.reserve(args_->length);
+  words2.reserve(args_->length);
+  predictions.clear();
+  dict_->getLine(in, words);
+  dict_->getLine(in, words2);
+  // DEBUG
+  // if (threshold < 0) {
+  //   std::cerr << words.size() - args_->length - args_->minn + 1 << std::endl;
+  //   // for (auto i = words.begin(); i != words.end(); ++i) {
+  //   //      std::cerr << *i << " " ;
+  //   //   }
+  //   // std::cerr << std::endl;
+  //   threshold = 0;
+  // }
+
+  if (words.empty() && words2.empty()) return;
+  Vector hidden(args_->dim);
+  Vector hidden2(args_->dim);
+  Vector output(dict_->nlabels());
+  std::vector<std::pair<real,int32_t>> modelPredictions;
+  model_->predict(words, k, threshold, modelPredictions, hidden, output);
+  for (auto it = modelPredictions.cbegin(); it != modelPredictions.cend(); it++) {
+    predictions.push_back(std::make_pair(it->first, dict_->getLabel(it->second)));
+  }
+}
+
 void FastText::predict(
   std::istream& in,
   int32_t k,
+  bool paired_end,
   bool print_prob,
   real threshold
 ) {
+
   std::vector<std::pair<real,std::string>> predictions;
   while (in.peek() != EOF) {
     predictions.clear();
-    predict(in, k, predictions, threshold);
+    if (paired_end) {
+      predict_paired(in, k, predictions, threshold);
+    }
+    else {
+      predict(in, k, predictions, threshold);
+    }
     if (predictions.empty()) {
       std::cout << std::endl;
       continue;

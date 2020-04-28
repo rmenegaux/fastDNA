@@ -75,13 +75,20 @@ class Model {
     void predict(const std::vector<index>&, int32_t, real,
                  std::vector<std::pair<real, int32_t>>&,
                  Vector&, Vector&) const;
+    void predict_paired(const std::vector<index>&, const std::vector<index>&,
+                        int32_t, real,
+                        std::vector<std::pair<real, int32_t>>&,
+                        Vector&, Vector&, Vector&, Vector&) const;
     void predict(const std::vector<index>&, int32_t, real,
                  std::vector<std::pair<real, int32_t>>&);
+    void predict_paired(const std::vector<index>&, const std::vector<index>&,
+                        int32_t, real,
+                        std::vector<std::pair<real, int32_t>>&);
     void dfs(int32_t, real, int32_t, real,
              std::vector<std::pair<real, int32_t>>&,
              Vector&) const;
     void findKBest(int32_t, real, std::vector<std::pair<real, int32_t>>&,
-                   Vector&, Vector&) const;
+                   Vector&) const;
     void update(const std::vector<index>&, int32_t, real);
     void computeHidden(const std::vector<index>&, Vector&) const;
     void computeOutputSoftmax(Vector&, Vector&) const;

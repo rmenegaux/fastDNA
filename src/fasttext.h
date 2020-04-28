@@ -91,7 +91,14 @@ class FastText {
   std::vector<int32_t> selectEmbeddings(int32_t) const;
   void quantize(const Args);
   std::tuple<int64_t, double, double> test(std::istream&, std::istream&, int32_t, real = 0.0);
-  void predict(std::istream&, int32_t, bool, real = 0.0);
+  std::tuple<int64_t, double, double> test_paired(std::istream&, std::istream&, int32_t, real = 0.0);
+  void predict(std::istream&, int32_t, bool, bool, real = 0.0);
+  void predict_paired(
+    std::istream&,
+    int32_t k,
+    std::vector<std::pair<real,std::string>>&,
+    real threshold
+  ) const;
   void predict(
       std::istream&,
       int32_t,

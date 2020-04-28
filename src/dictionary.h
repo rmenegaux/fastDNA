@@ -93,10 +93,8 @@ class Dictionary {
                     std::minstd_rand&) const;
     int32_t getLine(std::istream& fasta,
                             std::vector<index>& ngrams) const;
-    int32_t getLine(std::istream& fasta,
-                    std::istream& labelfile,
-                    std::vector<index>& ngrams,
-                    std::vector<int32_t>& labels) const;
+    int32_t getLabels(std::istream& labelfile,
+                                  std::vector<int32_t>& labels) const;
     void prune(std::vector<int32_t>&);
     bool isPruned() { return pruneidx_size_ >= 0; }
     void dump(std::ostream&) const;

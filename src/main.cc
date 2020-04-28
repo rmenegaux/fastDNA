@@ -129,7 +129,7 @@ void test(const std::vector<std::string>& args) {
       threshold = std::stof(args[6]);
     }
   }
-
+  bool paired_end = args[1] == "test-paired";
   FastText fasttext;
   // std::cerr << "Loading Model" << std::endl;
   fasttext.loadModel(args[2]);
@@ -151,7 +151,11 @@ void test(const std::vector<std::string>& args) {
       std::cerr << "Label file cannot be opened!" << std::endl;
       exit(EXIT_FAILURE);
     }
-    result = fasttext.test(ifs, labels, k, threshold);
+    if (paired_end) {
+      result = fasttext.test_paired(ifs, labels, k, threshold);
+    } else {
+      result = fasttext.test(ifs, labels, k, threshold);
+    }
     ifs.close();
   }
   std::cout << "N" << "\t" << std::get<0>(result) << std::endl;
@@ -168,6 +172,8 @@ void predict(const std::vector<std::string>& args) {
   }
   int32_t k = 1;
   real threshold = 0.0;
+  bool paired_end = (args[1] == "predict-paired" || args[1] == "predict-paired-prob");
+
   if (args.size() > 4) {
     k = std::stoi(args[4]);
     if (args.size() == 6) {
@@ -175,20 +181,20 @@ void predict(const std::vector<std::string>& args) {
     }
   }
 
-  bool print_prob = args[1] == "predict-prob";
+  bool print_prob = (args[1] == "predict-prob" || args[1] == "predict-paired-prob");
   FastText fasttext;
   fasttext.loadModel(std::string(args[2]));
 
   std::string infile(args[3]);
   if (infile == "-") {
-    fasttext.predict(std::cin, k, print_prob, threshold);
+    fasttext.predict(std::cin, k, paired_end, print_prob, threshold);
   } else {
     std::ifstream ifs(infile);
     if (!ifs.is_open()) {
       std::cerr << "Input file cannot be opened!" << std::endl;
       exit(EXIT_FAILURE);
     }
-    fasttext.predict(ifs, k, print_prob, threshold);
+    fasttext.predict(ifs, k, paired_end, print_prob, threshold);
     ifs.close();
   }
 
@@ -333,7 +339,7 @@ int main(int argc, char** argv) {
   std::string command(args[1]);
   if (command == "skipgram" || command == "cbow" || command == "supervised") {
     train(args);
-  } else if (command == "test") {
+  } else if (command == "test" || command == "test-paired") {
     test(args);
   } else if (command == "quantize") {
     quantize(args);
@@ -345,7 +351,8 @@ int main(int argc, char** argv) {
     nn(args);
   } else if (command == "analogies") {
     analogies(args);
-  } else if (command == "predict" || command == "predict-prob") {
+  } else if (command == "predict" || command == "predict-prob" ||
+             command == "predict-paired" || command == "predict-paired-prob") {
     predict(args);
   } else if (command == "dump") {
     dump(args);

@@ -156,7 +156,35 @@ void Model::predict(const std::vector<index>& input, int32_t k, real threshold,
   if (args_->loss == loss_name::hs) {
     dfs(k, threshold, 2 * osz_ - 2, 0.0, heap, hidden);
   } else {
-    findKBest(k, threshold, heap, hidden, output);
+    computeOutputSoftmax(hidden, output);
+    findKBest(k, threshold, heap, output);
+  }
+  std::sort_heap(heap.begin(), heap.end(), comparePairs);
+}
+
+void Model::predict_paired(
+  const std::vector<index>& input, const std::vector<index>& input2,
+  int32_t k, real threshold,
+  std::vector<std::pair<real, int32_t>>& heap,
+  Vector& hidden, Vector& hidden2, Vector& output, Vector& output2) const {
+  if (k <= 0) {
+    throw std::invalid_argument("k needs to be 1 or higher!");
+  }
+  if (args_->model != model_name::sup) {
+    throw std::invalid_argument("Model needs to be supervised for prediction!");
+  }
+  heap.reserve(k + 1);
+  computeHidden(input, hidden);
+  computeHidden(input2, hidden2);
+  if (args_->loss == loss_name::hs) {
+    throw std::invalid_argument("Paired end predictions are not implemented with hierarchical softmax loss.");
+    // dfs(k, threshold, 2 * osz_ - 2, 0.0, heap, hidden);
+  } else {
+    computeOutputSoftmax(hidden, output);
+    computeOutputSoftmax(hidden2, output2);
+    output.addVector(output2);
+    output.mul(0.5);
+    findKBest(k, threshold, heap, output);
   }
   std::sort_heap(heap.begin(), heap.end(), comparePairs);
 }
@@ -170,13 +198,24 @@ void Model::predict(
   predict(input, k, threshold, heap, hidden_, output_);
 }
 
+void Model::predict_paired(
+  const std::vector<index>& input,
+  const std::vector<index>& input2,
+  int32_t k,
+  real threshold,
+  std::vector<std::pair<real, int32_t>>& heap
+) {
+  Vector hidden2(hsz_);
+  Vector output2(osz_);
+  predict_paired(input, input2, k, threshold, heap, hidden_, hidden2, output_, output2);
+}
+
 void Model::findKBest(
   int32_t k,
   real threshold,
   std::vector<std::pair<real, int32_t>>& heap,
-  Vector& hidden, Vector& output
+  Vector& output
 ) const {
-  computeOutputSoftmax(hidden, output);
   for (int32_t i = 0; i < osz_; i++) {
     if (output[i] < threshold) continue;
     if (heap.size() == k && std_log(output[i]) < heap.front().first) {
