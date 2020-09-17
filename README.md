@@ -218,11 +218,9 @@ The python scripts require `numpy` and `scikit-learn` for evaluating predictions
 
 ## Data
 
-<<<<<<< HEAD
 The data used in the paper is available here: [http://projects.cbio.mines-paristech.fr/largescalemetagenomics/](http://projects.cbio.mines-paristech.fr/largescalemetagenomics/).
 =======
 The *small* and *large* datasets used in the paper can be found [here](http://projects.cbio.mines-paristech.fr/largescalemetagenomics/)
->>>>>>> 4107199ce5e43651843f74a41ec4e6ee5dae6671
 
 ## References
 
