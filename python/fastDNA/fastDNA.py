@@ -66,25 +66,29 @@ class FastDNA():
         return timed_check_call(command, name=readout, verbose=self.verbose)
 
 
-    def make_predictions(self, model_path, input_data, output_path):
+    def make_predictions(self, model_path, input_data, output_path, paired=False, threshold=0.):
         ''' 
         Predicts the labels for `input_data`
         Stores the results in `output_path`
         '''
-        command = '{} predict {} {} > {}'.format(
-            self.fastdna, model_path, input_data, output_path)
+        predict = 'predict-paired' if paired else 'predict'
+        # predict one label only for now
+        command = '{} {} {} {} 1 {} > {}'.format(
+            self.fastdna, predict, model_path, input_data, threshold, output_path)
 
         readout = 'Making predictions {}'.format(model_path.split('/')[-1])
         return timed_check_call(command, name=readout, verbose=self.verbose)
 
 
-    def predict_eval(self, model_path, input_data, input_labels, output_path):
+    def predict_eval(self, model_path, input_data, input_labels, output_path, paired=False, threshold=0.):
         '''
         Make predictions and evaluate them
         '''
         from evaluate import evaluate_predictions
 
-        time = self.make_predictions(model_path, input_data, output_path)
+        time = self.make_predictions(
+            model_path, input_data, output_path, paired=paired, threshold=threshold
+            )
         results = evaluate_predictions(output_path, input_labels, verbose=self.verbose)
         results['Time'] = time
         return results

@@ -35,6 +35,7 @@ parser.add_argument("-output_dir", help="output directory",
 # Model parameters
 parser.add_argument("-model_name", help="optional user-defined model name",
                     type=str)
+# Training parameters
 parser.add_argument("-threads", help="number of threads",
                     type=int, default=4)
 parser.add_argument("-d", help="embedding dimension",
@@ -50,6 +51,11 @@ parser.add_argument("-noise", help="level of training noise, percent of random m
 parser.add_argument("-L", help="training read length",
                     type=int, default=200)
 parser.add_argument("-freeze", help="freeze the embeddings",
+                    action="store_true")
+# Prediction parameters
+parser.add_argument("-threshold", help="minimum probability to make a prediction",
+                    type=float, default=0.)
+parser.add_argument("-paired", help="Add option if preicting on paired-end input",
                     action="store_true")
 # Additional files
 parser.add_argument("-pretrained_vectors", help="pretrained vectors .vec files",
@@ -136,6 +142,7 @@ if args.eval:
         args.test_fasta,
         args.test_labels,
         pred_path,
+        paired=args.paired,
     )
 
 elif args.predict:
@@ -143,6 +150,7 @@ elif args.predict:
         '{}.bin'.format(model_path),
         args.test_fasta,
         pred_path,
+        paired=args.paired,
     )
 
 if args.quantize:
@@ -153,5 +161,6 @@ if args.predict_quant:
         '{}.ftz'.format(model_path),
         args.test_fasta,
         pred_path,
+        paired=args.paired,
     )
 

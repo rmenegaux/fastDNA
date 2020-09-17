@@ -6,7 +6,7 @@ import os
 # -----------------
 data_path = 'data/'
 output_path = 'output/'
-fdna_py = '../python/fastDNA/fdna.py'
+fdna_py = '../fdna.py'
 
 train_dataset = os.path.join(data_path, 'train', 'A1.train.fasta')
 train_labels = os.path.join(data_path, 'train', 'A1.train.taxid')
@@ -16,9 +16,9 @@ test_labels = os.path.join(data_path, 'test', 'A1.test.taxid')
 args = {
 "output_dir": output_path, # Directory for saving model and predictions
 "train" : True, # train the model
-"train_dataset": train_dataset,
+"train_fasta": train_dataset,
 "train_labels": train_labels,
-"test_dataset": test_dataset,
+"test_fasta": test_dataset,
 "test_labels": test_labels,
 "quantize": False, # quantize the mode
 "predict": False, # make predictions
@@ -35,6 +35,8 @@ args = {
 "L": 100, # training read length,
 "freeze": False, # freeze the embeddings,
 "pretrained_vectors": False, # pretrained vectors .vec files,
+"paired": False, # paired end reads,
+"threshold": 0, # minimum probability to make a prediction,
 }
 
 # To reproduce results from the paper:
