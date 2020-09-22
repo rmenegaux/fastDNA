@@ -36,6 +36,8 @@ parser.add_argument("-output_dir", help="output directory",
 parser.add_argument("-model_name", help="optional user-defined model name",
                     type=str)
 # Training parameters
+parser.add_argument("-loss", help="loss function (softmax (default) or hs)",
+                    type=str, default='softmax')
 parser.add_argument("-threads", help="number of threads",
                     type=int, default=4)
 parser.add_argument("-d", help="embedding dimension",
@@ -88,7 +90,7 @@ for a in ['eval', 'predict', 'predict_quant']:
 # -----------------
 # General file Paths
 # -----------------
-fastdna_path = '../fastdna'
+fastdna_path = os.path.join(os.path.dirname(__file__), 'fastdna')
 
 # -----------------
 # FastDNA object
@@ -134,6 +136,7 @@ if args.train:
         freeze=args.freeze,
         pretrained_vectors=pretrained_vectors,
         threads=args.threads,
+        loss=args.loss,
         )
 
 if args.eval:
