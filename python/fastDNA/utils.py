@@ -8,5 +8,7 @@ def make_model_name(args):
             model_name += '_n{}'.format(args.noise)
         if args.L != 200:
             model_name += '_L{}'.format(args.L)
+        if args.loss != 'softmax':
+            model_name += '_{}loss'.format(args.loss)
 
     return model_name

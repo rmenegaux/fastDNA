@@ -28,6 +28,7 @@ class FastDNA():
     def train(self, model_path, train_data, train_labels,
               dim=10, k=10,
               length=200, epoch=1, lr=0.1, noise=0,
+              loss='softmax',
               freeze=False, pretrained_vectors="", previous_model="",
               threads=4):
         '''
@@ -38,8 +39,8 @@ class FastDNA():
             self.fastdna, train_data, model_path, train_labels)
 
         # Parameters for training
-        parameters = ' -epoch {} -dim {} -lr {} -minn {} -maxn {} -thread {} -length {}'.format(
-            epoch, dim, lr, k, k, threads, length)
+        parameters = ' -epoch {} -dim {} -lr {} -minn {} -maxn {} -thread {} -length {} -loss {}'.format(
+            epoch, dim, lr, k, k, threads, length, loss)
         if noise > 0:
             parameters += ' -noise {}'.format(int(noise * 1000))
         if freeze:

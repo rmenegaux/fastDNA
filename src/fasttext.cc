@@ -256,8 +256,8 @@ void FastText::printInfo(real progress, real loss, std::ostream& log_stream) {
   double wst = 0;
   int64_t eta = 720 * 3600; // Default to one month
   if (progress > 0 && t >= 0) {
-    eta = int(t / progress * (1 - progress) / args_->thread);
-    wst = double(tokenCount_) / t;
+    eta = int(t / progress * (1 - progress));
+    wst = double(tokenCount_) / t / args_->thread;
   }
   int32_t etah = eta / 3600;
   int32_t etam = (eta % 3600) / 60;
