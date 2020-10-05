@@ -382,18 +382,18 @@ void Model::loadTreeFromFile(std::istream& in, const std::map<std::string, int>&
 
   for (size_t i = 0; i < 2 * osz_ - 1; i++) {
     std::getline(in, line);
-    std::cerr << line << std::endl; 
+    // std::cerr << line << std::endl; 
     std::istringstream iss(line);
     c = iss.get(); // first char says whether node is leaf
     if (i == 0) {
       iss >> node_id >> count; // root node has no parent
-      std::cerr << "node id " << node_id << " count " << count << std::endl;
-      for (const auto pair : label2int) {
-        std::cerr << pair.first << " -> " << pair.second << std::endl;
-      }
+      // std::cerr << "node id " << node_id << " count " << count << std::endl;
+      // for (const auto pair : label2int) {
+      //  std::cerr << pair.first << " -> " << pair.second << std::endl;
+      //}
     } else {
       iss >> node_id >> parent_node_id >> count;
-      std::cerr << "node id " << node_id << "parent id " << parent_node_id << " count " << count << std::endl;
+      // std::cerr << "node id " << node_id << "parent id " << parent_node_id << " count " << count << std::endl;
       parent_node_id = 2 * osz_ - 2 - parent_node_id;
     }
     if (c == 'l'){ // leaf
@@ -402,13 +402,13 @@ void Model::loadTreeFromFile(std::istream& in, const std::map<std::string, int>&
     }
     else if (c == 'n'){ // non leaf
       while (iss >> taxid) {
-        std::cerr << "read id " << taxid << std::endl;
+        // std::cerr << "read id " << taxid << std::endl;
         taxids.push_back(taxid);
       }
       node_id = 2 * osz_ - 2 - node_id;
     }
     else { 
-      std::cerr << "wring first char" << std::endl;
+      // std::cerr << "wring first char" << std::endl;
       readTreeError(); 
     }
     tree[node_id].count = count;
@@ -423,8 +423,8 @@ void Model::loadTreeFromFile(std::istream& in, const std::map<std::string, int>&
         tree[node_id].binary = false;
       }
       else { 
-        std::cerr << osz_ << " output size " << std::endl;
-        std::cerr << parent_node_id << " has 2 children already goddammit " << std::endl;
+        // std::cerr << osz_ << " output size " << std::endl;
+        // std::cerr << parent_node_id << " has 2 children already goddammit " << std::endl;
         readTreeError();
       }
     }

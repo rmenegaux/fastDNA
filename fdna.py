@@ -60,6 +60,8 @@ parser.add_argument("-threshold", help="minimum probability to make a prediction
 parser.add_argument("-paired", help="Add option if preicting on paired-end input",
                     action="store_true")
 # Additional files
+parser.add_argument("-taxonomy", help="precomputed tree for hierarchical clustering",
+                    type=str, default="")
 parser.add_argument("-pretrained_vectors", help="pretrained vectors .vec files",
                     type=str)
 parser.add_argument("-verbose",
@@ -137,6 +139,7 @@ if args.train:
         pretrained_vectors=pretrained_vectors,
         threads=args.threads,
         loss=args.loss,
+        taxonomy=args.taxonomy,
         )
 
 if args.eval:

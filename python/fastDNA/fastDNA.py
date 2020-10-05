@@ -29,7 +29,9 @@ class FastDNA():
               dim=10, k=10,
               length=200, epoch=1, lr=0.1, noise=0,
               loss='softmax',
-              freeze=False, pretrained_vectors="", previous_model="",
+              freeze=False,
+              pretrained_vectors="", previous_model="",
+              taxonomy="",
               threads=4):
         '''
         Trains a fastdna model
@@ -50,6 +52,8 @@ class FastDNA():
             parameters += ' -pretrainedVectors {}'.format(pretrained_vectors)
         if len(previous_model) > 0:
             parameters += ' -loadModel {}'.format(previous_model)
+        if len(taxonomy) > 0:
+            parameters += ' -taxonomy {}'.format(taxonomy)
 
         command += parameters
 
