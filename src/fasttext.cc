@@ -183,6 +183,10 @@ void FastText::saveModel(const std::string path) {
     output_->save(ofs);
   }
 
+  if (args_->loss == loss_name::hs && args_->taxonomy != "") {
+    model_->saveTree(ofs);
+  }
+
   ofs.close();
 }
 
@@ -246,6 +250,9 @@ void FastText::loadModel(std::istream& in) {
     model_->setTargetCounts(dict_->getLabelCounts());
   } else {
     // model_->setTargetCounts(dict_->getCounts(entry_type::word));
+  }
+  if (args_->loss == loss_name::hs && args_->taxonomy == "t") {
+    model_->loadTree(in);
   }
 }
 
@@ -759,6 +766,14 @@ void FastText::train(const Args args) {
     model_->setTargetCounts(dict_->getLabelCounts());
   } else {
     // model_->setTargetCounts(dict_->getCounts(entry_type::word));
+  }
+  if (args_->loss == loss_name::hs && args_->taxonomy != "") {
+    std::ifstream ifs(args_->taxonomy);
+    if (!ifs.is_open()) {
+      throw std::invalid_argument(
+          args_->taxonomy + " cannot be opened for training!");
+    }
+    model_->loadTreeFromFile(ifs, dict_->getLabelMap());
   }
   startThreads();
 }

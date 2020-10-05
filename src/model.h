@@ -13,6 +13,7 @@
 #include <random>
 #include <utility>
 #include <memory>
+#include <map>
 
 #include "args.h"
 #include "matrix.h"
@@ -97,6 +98,12 @@ class Model {
     void setTargetCounts(const std::vector<int64_t>&);
     void initTableNegatives(const std::vector<int64_t>&);
     void buildTree(const std::vector<int64_t>&);
+    void buildTreePaths();
+    void initTree();
+    void saveTree(std::ostream& out);
+    void loadTree(std::istream& in);
+    void loadTreeFromFile(std::istream& in, const std::map<std::string, int>&);
+    void readTreeError();
     real getLoss() const;
     real sigmoid(real) const;
     real log(real) const;

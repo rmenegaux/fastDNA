@@ -87,6 +87,7 @@ class Dictionary {
     void load(std::istream&);
     // void loadLabelMap();
     std::vector<int64_t> getLabelCounts() const;
+    std::map<std::string, int> getLabelMap() const;
     int32_t getLine(std::istream&, std::vector<index>&, std::vector<int32_t>&)
         const;
     int32_t getLine(std::istream&, std::vector<index>&,

@@ -10,6 +10,7 @@
 #include "model.h"
 
 #include <iostream>
+#include <sstream>
 #include <assert.h>
 #include <algorithm>
 #include <stdexcept>
@@ -318,14 +319,7 @@ index Model::getNegative(index target) {
 }
 
 void Model::buildTree(const std::vector<int64_t>& counts) {
-  tree.resize(2 * osz_ - 1);
-  for (int32_t i = 0; i < 2 * osz_ - 1; i++) {
-    tree[i].parent = -1;
-    tree[i].left = -1;
-    tree[i].right = -1;
-    tree[i].count = 1e15;
-    tree[i].binary = false;
-  }
+  initTree();
   for (int32_t i = 0; i < osz_; i++) {
     tree[i].count = counts[i];
   }
@@ -347,6 +341,10 @@ void Model::buildTree(const std::vector<int64_t>& counts) {
     tree[mini[1]].parent = i;
     tree[mini[1]].binary = true;
   }
+  buildTreePaths();
+}
+
+void Model::buildTreePaths() {
   for (int32_t i = 0; i < osz_; i++) {
     std::vector<int32_t> path;
     std::vector<bool> code;
@@ -359,6 +357,115 @@ void Model::buildTree(const std::vector<int64_t>& counts) {
     paths.push_back(path);
     codes.push_back(code);
   }
+}
+
+void Model::initTree() {
+  tree.resize(2 * osz_ - 1);
+  for (int32_t i = 0; i < 2 * osz_ - 1; i++) {
+    tree[i].parent = -1;
+    tree[i].left = -1;
+    tree[i].right = -1;
+    tree[i].count = 1e15;
+    tree[i].binary = false;
+  }
+}
+
+void Model::loadTreeFromFile(std::istream& in, const std::map<std::string, int>& label2int) {
+  initTree();
+  char c;
+  int64_t count;
+  int node_id;
+  int parent_node_id;
+  std::vector<std::string> taxids;
+  std::string line;
+  std::string taxid;
+
+  for (size_t i = 0; i < 2 * osz_ - 1; i++) {
+    std::getline(in, line);
+    std::cerr << line << std::endl; 
+    std::istringstream iss(line);
+    c = iss.get(); // first char says whether node is leaf
+    if (i == 0) {
+      iss >> node_id >> count; // root node has no parent
+      std::cerr << "node id " << node_id << " count " << count << std::endl;
+      for (const auto pair : label2int) {
+        std::cerr << pair.first << " -> " << pair.second << std::endl;
+      }
+    } else {
+      iss >> node_id >> parent_node_id >> count;
+      std::cerr << "node id " << node_id << "parent id " << parent_node_id << " count " << count << std::endl;
+      parent_node_id = 2 * osz_ - 2 - parent_node_id;
+    }
+    if (c == 'l'){ // leaf
+      iss >> taxid;
+      node_id = label2int.at(taxid);
+    }
+    else if (c == 'n'){ // non leaf
+      while (iss >> taxid) {
+        std::cerr << "read id " << taxid << std::endl;
+        taxids.push_back(taxid);
+      }
+      node_id = 2 * osz_ - 2 - node_id;
+    }
+    else { 
+      std::cerr << "wring first char" << std::endl;
+      readTreeError(); 
+    }
+    tree[node_id].count = count;
+    if (i > 0) {
+      tree[node_id].parent = parent_node_id;
+      if (tree[parent_node_id].left == -1) {
+        tree[parent_node_id].left = node_id;
+        tree[node_id].binary = true;
+      }
+      else if (tree[parent_node_id].right == -1) {
+        tree[parent_node_id].right = node_id;
+        tree[node_id].binary = false;
+      }
+      else { 
+        std::cerr << osz_ << " output size " << std::endl;
+        std::cerr << parent_node_id << " has 2 children already goddammit " << std::endl;
+        readTreeError();
+      }
+    }
+  }
+  buildTreePaths();
+}
+
+void Model::readTreeError() {
+  throw std::invalid_argument("Invalid format for " + args_->taxonomy);
+}
+
+void Model::saveTree(std::ostream& out) {
+  for (size_t i = 0; i < 2 * osz_ - 1; i++) {
+    if (i < 2 * osz_ - 2) {
+      out.write((char*) &tree[i].parent, sizeof(int));
+    }
+    if (i >= osz_) {
+      out.write((char*) &tree[i].left, sizeof(int));
+      out.write((char*) &tree[i].right, sizeof(int));
+    }
+    out.write((char*) &tree[i].count, sizeof(int64_t));
+    out.put(0);
+  }
+}
+
+void Model::loadTree(std::istream& in) {
+  initTree();
+  for (size_t i = 0; i < 2 * osz_ - 1; i++) {
+    if (i < 2 * osz_ - 2) {
+      in.read((char*) &(tree[i].parent), sizeof(int));
+    }
+    if (i >= osz_) {
+      in.read((char*) &tree[i].left, sizeof(int));
+      tree[tree[i].left].binary = true;
+      in.read((char*) &tree[i].right, sizeof(int));
+      tree[tree[i].right].binary = false;
+    }
+    in.read((char*) &(tree[i].count), sizeof(int64_t));
+    in.get();
+  }
+  buildTreePaths();
 }
 
 real Model::getLoss() const {

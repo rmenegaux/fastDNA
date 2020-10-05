@@ -436,6 +436,10 @@ std::vector<int64_t> Dictionary::getLabelCounts() const {
   return counts_;
 }
 
+std::map<std::string, int> Dictionary::getLabelMap() const {
+  return label2int_;
+}
+
 void Dictionary::reset(std::istream& in) const {
   if (in.eof()) {
     // FIXME use utils::seek

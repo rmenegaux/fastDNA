@@ -52,6 +52,7 @@ class Args {
     int verbose;
     std::string pretrainedVectors;
     std::string loadModel;
+    std::string taxonomy;
     bool saveOutput;
     bool freezeEmbeddings;
 

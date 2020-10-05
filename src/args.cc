@@ -39,6 +39,7 @@ Args::Args() {
   verbose = 2;
   pretrainedVectors = "";
   loadModel = "";
+  taxonomy = "";
   saveOutput = false;
   freezeEmbeddings = false;
 
@@ -162,6 +163,8 @@ void Args::parseArgs(const std::vector<std::string>& args) {
         pretrainedVectors = std::string(args.at(ai + 1));
       } else if (args[ai] == "-loadModel") {
         loadModel = std::string(args.at(ai + 1));
+      } else if (args[ai] == "-taxonomy") {
+        taxonomy = std::string(args.at(ai + 1));
       } else if (args[ai] == "-saveOutput") {
         saveOutput = true;
         ai--;
@@ -247,6 +250,7 @@ void Args::printTrainingHelp() {
     << "  -thread             number of threads [" << thread << "]\n"
     << "  -pretrainedVectors  pretrained word vectors for supervised learning ["<< pretrainedVectors <<"]\n"
     << "  -loadModel          pretrained model for supervised learning ["<< loadModel <<"]\n"
+    << "  -taxonomy           precomputed binary tree for hierarchical softmax ["<< taxonomy <<"]\n"
     << "  -saveOutput         whether output params should be saved [" << boolToString(saveOutput) << "]\n"
     << "  -freezeEmbeddings   model does not update the embedding vectors [" << boolToString(freezeEmbeddings) << "]\n";
 }
@@ -275,6 +279,8 @@ void Args::save(std::ostream& out) {
   out.write((char*) &(maxn), sizeof(int));
   out.write((char*) &(lrUpdateRate), sizeof(int));
   out.write((char*) &(t), sizeof(double));
+  char taxomy_bool = (taxonomy == "") ? 'f' : 't';
+  out.write((char*) &(taxomy_bool), sizeof(char));
 }
 
 void Args::load(std::istream& in) {
@@ -291,6 +297,7 @@ void Args::load(std::istream& in) {
   in.read((char*) &(maxn), sizeof(int));
   in.read((char*) &(lrUpdateRate), sizeof(int));
   in.read((char*) &(t), sizeof(double));
+  in.read((char*) &(taxonomy), sizeof(char));
 }
 
 void Args::dump(std::ostream& out) const {
