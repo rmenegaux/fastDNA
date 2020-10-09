@@ -87,8 +87,6 @@ void Args::parseArgs(const std::vector<std::string>& args) {
     model = model_name::sup;
     loss = loss_name::softmax;
     minCount = 1;
-    minn = 0;
-    maxn = 0;
     lr = 0.1;
   } else if (command == "cbow") {
     model = model_name::cbow;
