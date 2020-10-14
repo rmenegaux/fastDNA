@@ -240,7 +240,7 @@ void FastText::loadModel(std::istream& in) {
   } else {
     output_->load(in);
   }
-
+  // std::cerr << "Making model " << args_->use_taxonomy << std::endl;
   model_ = std::make_shared<Model>(input_, output_, args_, 0);
   model_->quant_ = quant_;
   model_->setQuantizePointer(qinput_, qoutput_, args_->qout);
@@ -251,8 +251,10 @@ void FastText::loadModel(std::istream& in) {
   } else {
     // model_->setTargetCounts(dict_->getCounts(entry_type::word));
   }
-  if (args_->loss == loss_name::hs && args_->taxonomy == "t") {
+  if (args_->loss == loss_name::hs && args_->use_taxonomy) {
+    // std::cerr << "Loading tree" << std::endl;
     model_->loadTree(in);
+    // model_->printTree();
   }
 }
 
@@ -632,6 +634,7 @@ void FastText::analogies(int32_t k) {
 }
 
 void FastText::trainThread(int32_t threadId) {
+  // std::cerr << "Train thread " << threadId << std::endl;
   std::ifstream ifs(args_->input);
   const int64_t size_ = utils::size(ifs);
   std::streampos pos;
@@ -641,11 +644,12 @@ void FastText::trainThread(int32_t threadId) {
   std::mt19937_64 rng(threadId);
   std::uniform_int_distribution<int64_t> uniform(0, size_-1);
 
+  // std::cerr << "Initialize model " << std::endl;
   Model model(input_, output_, args_, threadId);
-  if (args_->model == model_name::sup) {
-    model.setTargetCounts(dict_->getLabelCounts());
-  } else {
-  }
+  if (args_->model == model_name::sup && args_->loss == loss_name::hs) {
+    model.setTree(model_->getTree());
+    // model.printTree();
+  } 
   // FIXME
   const int64_t ntokens = size_ / args_->length; // dict_->ntokens();
   int64_t localFragmentCount = 0;
@@ -668,7 +672,6 @@ void FastText::trainThread(int32_t threadId) {
         utils::seek(ifs, pos);
         if (dict_->readSequence(ifs, line, args_->length, true, rng)) {
           localFragmentCount += 1;
-          // std::cerr << "\r supervised " << std::endl;
           supervised(model, lr, line, labels);
         }
       }
@@ -774,6 +777,7 @@ void FastText::train(const Args args) {
           args_->taxonomy + " cannot be opened for training!");
     }
     model_->loadTreeFromFile(ifs, dict_->getLabelMap());
+    // model_->printTree();
   }
   startThreads();
 }

@@ -48,6 +48,8 @@ Args::Args() {
   qnorm = false;
   cutoff = 0;
   dsub = 2;
+
+  use_taxonomy = false;
 }
 
 std::string Args::lossToString(loss_name ln) const {
@@ -165,6 +167,7 @@ void Args::parseArgs(const std::vector<std::string>& args) {
         loadModel = std::string(args.at(ai + 1));
       } else if (args[ai] == "-taxonomy") {
         taxonomy = std::string(args.at(ai + 1));
+        use_taxonomy = (taxonomy != "");
       } else if (args[ai] == "-saveOutput") {
         saveOutput = true;
         ai--;
@@ -279,8 +282,7 @@ void Args::save(std::ostream& out) {
   out.write((char*) &(maxn), sizeof(int));
   out.write((char*) &(lrUpdateRate), sizeof(int));
   out.write((char*) &(t), sizeof(double));
-  char taxomy_bool = (taxonomy == "") ? 'f' : 't';
-  out.write((char*) &(taxomy_bool), sizeof(char));
+  out.write((char*) &(use_taxonomy), sizeof(bool));
 }
 
 void Args::load(std::istream& in) {
@@ -297,7 +299,7 @@ void Args::load(std::istream& in) {
   in.read((char*) &(maxn), sizeof(int));
   in.read((char*) &(lrUpdateRate), sizeof(int));
   in.read((char*) &(t), sizeof(double));
-  in.read((char*) &(taxonomy), sizeof(char));
+  in.read((char*) &(use_taxonomy), sizeof(bool));
 }
 
 void Args::dump(std::ostream& out) const {

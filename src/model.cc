@@ -290,8 +290,8 @@ void Model::setTargetCounts(const std::vector<int64_t>& counts) {
   if (args_->loss == loss_name::ns) {
     initTableNegatives(counts);
   }
-  if (args_->loss == loss_name::hs) {
-    buildTree(counts);
+  if (args_->loss == loss_name::hs && !args_->use_taxonomy) {
+    //buildTree(counts);
   }
 }
 
@@ -382,15 +382,14 @@ void Model::loadTreeFromFile(std::istream& in, const std::map<std::string, int>&
 
   for (size_t i = 0; i < 2 * osz_ - 1; i++) {
     std::getline(in, line);
-    // std::cerr << line << std::endl; 
     std::istringstream iss(line);
     c = iss.get(); // first char says whether node is leaf
     if (i == 0) {
       iss >> node_id >> count; // root node has no parent
       // std::cerr << "node id " << node_id << " count " << count << std::endl;
       // for (const auto pair : label2int) {
-      //  std::cerr << pair.first << " -> " << pair.second << std::endl;
-      //}
+      //   std::cerr << pair.first << " -> " << pair.second << std::endl;
+      // }
     } else {
       iss >> node_id >> parent_node_id >> count;
       // std::cerr << "node id " << node_id << "parent id " << parent_node_id << " count " << count << std::endl;
@@ -402,30 +401,30 @@ void Model::loadTreeFromFile(std::istream& in, const std::map<std::string, int>&
     }
     else if (c == 'n'){ // non leaf
       while (iss >> taxid) {
-        // std::cerr << "read id " << taxid << std::endl;
         taxids.push_back(taxid);
       }
       node_id = 2 * osz_ - 2 - node_id;
     }
-    else { 
-      // std::cerr << "wring first char" << std::endl;
-      readTreeError(); 
+    else {
+      //std::cerr << "wrong first char at line " << i << std::endl;
+      //readTreeError();
     }
     tree[node_id].count = count;
     if (i > 0) {
       tree[node_id].parent = parent_node_id;
       if (tree[parent_node_id].left == -1) {
         tree[parent_node_id].left = node_id;
-        tree[node_id].binary = true;
+        tree[node_id].binary = false;
       }
       else if (tree[parent_node_id].right == -1) {
         tree[parent_node_id].right = node_id;
-        tree[node_id].binary = false;
+        tree[node_id].binary = true;
       }
       else { 
-        // std::cerr << osz_ << " output size " << std::endl;
-        // std::cerr << parent_node_id << " has 2 children already goddammit " << std::endl;
-        readTreeError();
+        //std::cerr << "error trying to insert " << 2 * osz_ - 2 - node_id << " taxid " <<" at line " << i << std::endl;
+        //std::cerr << "taxid " << taxid << std::endl;
+        //std::cerr << "Its parent "<< 2 * osz_ - 2 - parent_node_id << " already has 2 children" << std::endl;
+        // readTreeError();
       }
     }
   }
@@ -447,6 +446,20 @@ void Model::saveTree(std::ostream& out) {
     }
     out.write((char*) &tree[i].count, sizeof(int64_t));
     out.put(0);
+  }
+}
+
+void Model::printTree() {
+  for (size_t i = 2 * osz_ - 1; i-- > 0;) {
+    std::cerr << " self:" << i;
+    if (i < 2 * osz_ - 2) {
+      std::cerr << " parent:" << tree[i].parent;
+    }
+    if (i >= osz_) {
+      std::cerr << " left:" << tree[i].left;
+      std::cerr << " right:" << tree[i].right;
+    }
+    std::cerr << " count:" << tree[i].count << std::endl;
   }
 }
 

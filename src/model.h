@@ -73,6 +73,9 @@ class Model {
     real hierarchicalSoftmax(int32_t, real);
     real softmax(int32_t, real);
 
+    const std::vector<Node> getTree() { return tree; }
+    void setTree(const std::vector<Node> new_tree) { tree = new_tree; buildTreePaths(); }
+
     void predict(const std::vector<index>&, int32_t, real,
                  std::vector<std::pair<real, int32_t>>&,
                  Vector&, Vector&) const;
@@ -102,6 +105,7 @@ class Model {
     void initTree();
     void saveTree(std::ostream& out);
     void loadTree(std::istream& in);
+    void printTree();
     void loadTreeFromFile(std::istream& in, const std::map<std::string, int>&);
     void readTreeError();
     real getLoss() const;
