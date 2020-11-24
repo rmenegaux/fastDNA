@@ -167,6 +167,7 @@ python fdna.py -train -train_fasta /path/to/train_large_fasta -train_labels /pat
     -eval -test_fasta /path/to/test_large_fasta -test_labels /path/to/test_large_labels \
     -k 13 -d 100 -noise 4 -e 200
 ```
+NB: Best parameters for classification tasks are `k=14, d=50, noise=4`
 
 Full usage:
 ```
