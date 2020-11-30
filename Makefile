@@ -8,7 +8,7 @@
 #
 
 CXX = c++
-CXXFLAGS = -pthread -std=c++0x -march=native
+CXXFLAGS = -pthread -std=c++0x -march=native -lz
 OBJS = common.o hash.o Kmer.o KmerIterator.o KmerIndex.o args.o dictionary.o productquantizer.o matrix.o qmatrix.o vector.o model.o utils.o fasttext.o
 INCLUDES = -I.
 
@@ -64,7 +64,7 @@ fasttext.o: src/fasttext.cc src/*.h src/*.hpp
 	$(CXX) $(CXXFLAGS) -c src/fasttext.cc
 
 fastdna: $(OBJS) src/fasttext.cc
-	$(CXX) $(CXXFLAGS) -lz $(OBJS) src/main.cc -o fastdna
+	$(CXX) $(CXXFLAGS) $(OBJS) src/main.cc -lz -o fastdna
 
 clean:
 	rm -rf *.o fasttext
