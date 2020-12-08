@@ -1,17 +1,21 @@
-# Build a kallisto index
+# Build a bifrost index
 
 root_folder=/Users/romainmenegaux/These
-kallisto=$root_folder/kallisto/build/src/kallisto
+bifrost=$root_folder/bifrost/build/src/Bifrost
 
 # FASTA file to index
 db="small"
 data=$root_folder/these_romain/data/$db-DB/reference-dataset/train_$db-db.fasta
+data=data/train/A1.train.fasta
+db=A1
 
 # k-mer size (must be odd)
 k=13
+# Number of threads
+threads=4
 
 # Name of the output file
-index_file=$root_folder/these_romain/data/kallisto_index_$db_k$k
+index_file=output/bifrost_index_$db_k$k
 
 # Build kallisto index
-$kallisto index $data --make-unique -i $index_file -k $k
+$bifrost build -t $threads -k $k -o $index_file -s $data -v
