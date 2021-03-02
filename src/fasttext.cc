@@ -646,10 +646,15 @@ void FastText::trainThread(int32_t threadId) {
 
   // std::cerr << "Initialize model " << std::endl;
   Model model(input_, output_, args_, threadId);
-  if (args_->model == model_name::sup && args_->loss == loss_name::hs) {
-    model.setTree(model_->getTree());
+  if (args_->model == model_name::sup) {
+    if (args_->loss == loss_name::hs) {
+      model.setTree(model_->getTree());
+    }
+    if (args_->loss == loss_name::ns) {
+      model.initTableNegatives(dict_->getLabelCounts());
+    }
     // model.printTree();
-  } 
+  }
   // FIXME
   const int64_t ntokens = size_ / args_->length; // dict_->ntokens();
   int64_t localFragmentCount = 0;

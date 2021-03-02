@@ -180,10 +180,16 @@ void predict(const std::vector<std::string>& args) {
       threshold = std::stof(args[5]);
     }
   }
+  std::cerr << std::setprecision(1) << std::fixed;
 
   bool print_prob = (args[1] == "predict-prob" || args[1] == "predict-paired-prob");
   FastText fasttext;
+  clock_t start_load = clock();
   fasttext.loadModel(std::string(args[2]));
+  clock_t start_pred = clock();
+
+  double time = double(start_pred - start_load) / double(CLOCKS_PER_SEC);
+  std::cerr << " Model loaded, time: " << time << "s" << std::endl;
 
   std::string infile(args[3]);
   if (infile == "-") {
@@ -197,7 +203,8 @@ void predict(const std::vector<std::string>& args) {
     fasttext.predict(ifs, k, paired_end, print_prob, threshold);
     ifs.close();
   }
-
+  time = double(clock() - start_pred) / double(CLOCKS_PER_SEC);
+  std::cerr << " Total prediction time: " << time << "s" << std::endl;
   exit(0);
 }
 
@@ -291,7 +298,7 @@ void train(const std::vector<std::string> args) {
   ofs.close();
   fasttext.train(a);
   fasttext.saveModel();
-  fasttext.saveVectors();
+//  fasttext.saveVectors();
   if (a.saveOutput) {
     fasttext.saveOutput();
   }
